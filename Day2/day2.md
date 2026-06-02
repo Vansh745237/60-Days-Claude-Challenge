@@ -83,3 +83,5 @@ Section 3: Detailed Image Generation Prompt
 **Conclusion**
 
 Today's learning demonstrated that the quality of AI outputs depends heavily on the quality of prompts. By providing clear instructions, context, goals, and constraints, users can significantly improve the usefulness, accuracy, and professionalism of AI-generated content.
+<img width="1259" height="711" alt="Screenshot 2026-06-02 203536" src="https://github.com/user-attachments/assets/ceb4f09f-ae17-4c12-9b28-3909c56f29fe" />
+<img width="739" height="716" alt="Screenshot 2026-06-02 203850" src="https://github.com/user-attachments/assets/d3517c8f-9948-413e-835f-9cda4409c0ab" />
