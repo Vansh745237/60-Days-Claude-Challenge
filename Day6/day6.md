@@ -36,10 +36,9 @@ PART 1 — ATS SCORE (keep short, no full report)
 - 5–8 bullets, each stating what you changed and why it raised the score.
 
 PART 1- NORMAL RESUME
-<img width="270" height="345" alt="Screenshot 2026-06-06 140432" src="https://github.com/user-attachments/assets/d6f71a4a-0245-4439-8160-ae36dd0cd215" />
 
 PART 2 — FINAL RESUME
-<img width="347" height="386" alt="Screenshot 2026-06-06 140445" src="https://github.com/user-attachments/assets/c841b91f-624d-4600-9590-e60b1558f763" />
+
 
 Generate the optimized resume and provide it in a PDF-ready one-page A4 format.
 
@@ -164,6 +163,13 @@ This exercise demonstrated how AI can significantly improve resume quality by:
 The optimized resume is now better positioned for Data Science, Machine Learning, and Software Development internship opportunities.
 
 ---
+NORMAL RESUME
+<img width="270" height="345" alt="Screenshot 2026-06-06 140432" src="https://github.com/user-attachments/assets/368641ba-bbda-49c6-b5c9-c1917cb80372" />
+
+OPTIMIZED RESUME
+<img width="347" height="386" alt="Screenshot 2026-06-06 140445" src="https://github.com/user-attachments/assets/cdfd3cb3-f3c3-4552-b1c7-f558458f2f2f" />
+
+
 
 ## 🎉 Day 6 Complete
 
