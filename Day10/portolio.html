@@ -1,0 +1,906 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Vansh Bathla | Portfolio</title>
+
+<meta name="description" content="Portfolio of Vansh Bathla - Data Science Enthusiast, AI Builder and Full Stack Developer">
+<meta name="keywords" content="Vansh Bathla, Portfolio, Data Science, AI, Machine Learning">
+<meta name="author" content="Vansh Bathla">
+
+<script src="https://cdn.tailwindcss.com"></script>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+<style>
+
+*{
+font-family:'Poppins',sans-serif;
+scroll-behavior:smooth;
+}
+
+body{
+background:#020617;
+color:white;
+overflow-x:hidden;
+}
+
+.gradient-text{
+background:linear-gradient(
+135deg,
+#06b6d4,
+#6366f1
+);
+
+-webkit-background-clip:text;
+-webkit-text-fill-color:transparent;
+}
+
+.glass{
+background:rgba(255,255,255,0.05);
+backdrop-filter:blur(20px);
+border:1px solid rgba(255,255,255,0.08);
+}
+
+.section{
+padding:100px 0;
+}
+
+.fade{
+opacity:0;
+transform:translateY(40px);
+transition:all .8s ease;
+}
+
+.fade.show{
+opacity:1;
+transform:translateY(0);
+}
+
+.active-link{
+color:#22d3ee;
+}
+
+.profile-glow{
+box-shadow:
+0 0 20px #22d3ee,
+0 0 60px rgba(34,211,238,.3);
+}
+
+</style>
+
+</head>
+
+<body>
+
+<!-- NAVBAR -->
+
+<nav class="fixed top-0 left-0 w-full z-50 glass">
+
+<div class="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
+
+<h1 class="text-2xl md:text-3xl font-bold gradient-text">
+Vansh Bathla
+</h1>
+
+<div class="hidden md:flex gap-8">
+
+<a href="#home" class="nav-link">Home</a>
+<a href="#about" class="nav-link">About</a>
+<a href="#skills" class="nav-link">Skills</a>
+<a href="#projects" class="nav-link">Projects</a>
+<a href="#achievements" class="nav-link">Achievements</a>
+<a href="#contact" class="nav-link">Contact</a>
+
+</div>
+
+<button
+id="themeBtn"
+class="bg-cyan-500 px-4 py-2 rounded-xl">
+
+🌙
+
+</button>
+
+</div>
+
+</nav>
+
+<!-- HERO -->
+
+<section
+id="home"
+class="min-h-screen flex items-center">
+
+<div class="max-w-7xl mx-auto px-6 grid md:grid-cols-2 gap-16 items-center">
+
+<!-- LEFT -->
+
+<div>
+
+<p class="text-cyan-400 mb-4 text-lg">
+Hello, I'm
+</p>
+
+<h1 class="text-5xl md:text-7xl font-extrabold mb-4">
+Vansh Bathla
+</h1>
+
+<h2 class="text-2xl md:text-3xl text-slate-300 mb-6">
+
+<span id="typing"></span>
+
+</h2>
+
+<p class="text-slate-400 leading-relaxed text-lg">
+
+B.Tech CSE (Data Science) student passionate about Artificial Intelligence,
+Machine Learning, Generative AI and Full Stack Development.
+
+Building real-world applications that solve meaningful problems through technology.
+
+</p>
+
+<div class="flex flex-wrap gap-4 mt-8">
+
+<a
+href="#projects"
+class="bg-cyan-500 hover:bg-cyan-600 px-6 py-3 rounded-xl">
+
+View Projects
+
+</a>
+
+<a
+href="#contact"
+class="border border-cyan-500 px-6 py-3 rounded-xl">
+
+Contact Me
+
+</a>
+
+</div>
+
+<div class="flex gap-6 mt-8 text-cyan-400">
+
+<a
+target="_blank"
+href="https://github.com/Vansh745237">
+
+GitHub
+
+</a>
+
+<a
+target="_blank"
+href="https://linkedin.com/in/vansh-bathla-a5a7962b1/">
+
+LinkedIn
+
+</a>
+
+<a
+href="mailto:vanshbathla125@gmail.com">
+
+Email
+
+</a>
+
+</div>
+
+</div>
+
+<!-- RIGHT -->
+
+<div class="flex justify-center">
+
+<div class="relative">
+
+<img
+src="profile.jpg"
+alt="Vansh Bathla"
+class="w-80 h-80 md:w-96 md:h-96 object-cover rounded-full border-4 border-cyan-500 profile-glow">
+
+<div
+class="absolute inset-0 rounded-full border-4 border-cyan-400 animate-pulse">
+
+</div>
+
+</div>
+
+</div>
+
+</div>
+
+</section>
+
+<!-- ABOUT -->
+
+<section
+id="about"
+class="section fade">
+
+<div class="max-w-6xl mx-auto px-6">
+
+<h2 class="text-4xl font-bold mb-10 gradient-text">
+About Me
+</h2>
+
+<div class="glass rounded-3xl p-8">
+
+<p class="text-slate-300 leading-loose text-lg">
+
+I am Vansh Bathla, a B.Tech Computer Science (Data Science) student with a strong interest in Artificial Intelligence, Machine Learning, Data Analytics, and Full Stack Development.
+
+I enjoy creating intelligent systems that solve real-world problems through data-driven insights and innovative technology.
+
+My recent work includes predictive analytics platforms, AI-powered nutrition tracking systems, and modern web applications.
+
+</p>
+
+</div>
+
+</div>
+
+</section>
+<!-- SKILLS -->
+
+<section
+id="skills"
+class="section fade">
+
+<div class="max-w-6xl mx-auto px-6">
+
+<h2 class="text-4xl font-bold mb-10 gradient-text">
+Skills
+</h2>
+
+<div class="grid md:grid-cols-2 gap-10">
+
+<!-- TECHNICAL -->
+
+<div class="glass rounded-3xl p-8">
+
+<h3 class="text-2xl font-semibold mb-6">
+Technical Skills
+</h3>
+
+<div class="space-y-5">
+
+<div>
+<p class="mb-2">Python</p>
+<div class="w-full bg-slate-800 rounded-full h-3">
+<div class="bg-cyan-500 h-3 rounded-full skill" data-width="95%"></div>
+</div>
+</div>
+
+<div>
+<p class="mb-2">Machine Learning</p>
+<div class="w-full bg-slate-800 rounded-full h-3">
+<div class="bg-cyan-500 h-3 rounded-full skill" data-width="90%"></div>
+</div>
+</div>
+
+<div>
+<p class="mb-2">SQL</p>
+<div class="w-full bg-slate-800 rounded-full h-3">
+<div class="bg-cyan-500 h-3 rounded-full skill" data-width="85%"></div>
+</div>
+</div>
+
+<div>
+<p class="mb-2">React.js</p>
+<div class="w-full bg-slate-800 rounded-full h-3">
+<div class="bg-cyan-500 h-3 rounded-full skill" data-width="82%"></div>
+</div>
+</div>
+
+<div>
+<p class="mb-2">Data Science</p>
+<div class="w-full bg-slate-800 rounded-full h-3">
+<div class="bg-cyan-500 h-3 rounded-full skill" data-width="92%"></div>
+</div>
+</div>
+
+</div>
+
+</div>
+
+<!-- TOOLS -->
+
+<div class="glass rounded-3xl p-8">
+
+<h3 class="text-2xl font-semibold mb-6">
+Tools & Technologies
+</h3>
+
+<div class="flex flex-wrap gap-3">
+
+<span class="bg-cyan-500 px-4 py-2 rounded-full">
+VS Code
+</span>
+
+<span class="bg-indigo-500 px-4 py-2 rounded-full">
+Git
+</span>
+
+<span class="bg-purple-500 px-4 py-2 rounded-full">
+GitHub
+</span>
+
+<span class="bg-green-500 px-4 py-2 rounded-full">
+Power BI
+</span>
+
+<span class="bg-pink-500 px-4 py-2 rounded-full">
+Jupyter
+</span>
+
+<span class="bg-yellow-500 text-black px-4 py-2 rounded-full">
+FastAPI
+</span>
+
+<span class="bg-red-500 px-4 py-2 rounded-full">
+Vercel
+</span>
+
+<span class="bg-cyan-700 px-4 py-2 rounded-full">
+Chart.js
+</span>
+
+</div>
+
+<h3 class="text-2xl font-semibold mt-10 mb-5">
+Soft Skills
+</h3>
+
+<div class="flex flex-wrap gap-3">
+
+<span class="border border-cyan-500 px-4 py-2 rounded-full">
+Leadership
+</span>
+
+<span class="border border-cyan-500 px-4 py-2 rounded-full">
+Communication
+</span>
+
+<span class="border border-cyan-500 px-4 py-2 rounded-full">
+Problem Solving
+</span>
+
+<span class="border border-cyan-500 px-4 py-2 rounded-full">
+Teamwork
+</span>
+
+<span class="border border-cyan-500 px-4 py-2 rounded-full">
+Adaptability
+</span>
+
+</div>
+
+</div>
+
+</div>
+
+</div>
+
+</section>
+
+<!-- PROJECTS -->
+
+<section
+id="projects"
+class="section fade">
+
+<div class="max-w-7xl mx-auto px-6">
+
+<h2 class="text-4xl font-bold mb-12 gradient-text">
+Featured Projects
+</h2>
+
+<div class="grid md:grid-cols-3 gap-8">
+
+<!-- PROJECT 1 -->
+
+<div class="glass rounded-3xl p-8 hover:scale-105 transition">
+
+<h3 class="text-2xl font-bold mb-4">
+🔥 Forest Fire Prediction
+</h3>
+
+<p class="text-slate-300 mb-5">
+
+Developed an AI-powered prediction system that analyzes environmental
+factors to estimate forest fire risk and assist in preventive action.
+
+</p>
+
+<div class="flex flex-wrap gap-2 mb-5">
+
+<span class="bg-cyan-600 px-3 py-1 rounded-full">
+Python
+</span>
+
+<span class="bg-cyan-600 px-3 py-1 rounded-full">
+Machine Learning
+</span>
+
+<span class="bg-cyan-600 px-3 py-1 rounded-full">
+FastAPI
+</span>
+
+<span class="bg-cyan-600 px-3 py-1 rounded-full">
+React
+</span>
+
+</div>
+
+<a
+href="https://github.com/Vansh745237"
+target="_blank"
+class="text-cyan-400">
+
+View Project →
+
+</a>
+
+</div>
+
+<!-- PROJECT 2 -->
+
+<div class="glass rounded-3xl p-8 hover:scale-105 transition">
+
+<h3 class="text-2xl font-bold mb-4">
+🥗 NutriScope
+</h3>
+
+<p class="text-slate-300 mb-5">
+
+Advanced nutrition tracking dashboard with calorie analysis,
+macro distribution charts, AI recommendations and health insights.
+
+</p>
+
+<div class="flex flex-wrap gap-2 mb-5">
+
+<span class="bg-green-600 px-3 py-1 rounded-full">
+HTML
+</span>
+
+<span class="bg-green-600 px-3 py-1 rounded-full">
+JavaScript
+</span>
+
+<span class="bg-green-600 px-3 py-1 rounded-full">
+Chart.js
+</span>
+
+</div>
+
+<a
+href="https://github.com/Vansh745237"
+target="_blank"
+class="text-cyan-400">
+
+View Project →
+
+</a>
+
+</div>
+
+<!-- PROJECT 3 -->
+
+<div class="glass rounded-3xl p-8 hover:scale-105 transition">
+
+<h3 class="text-2xl font-bold mb-4">
+💼 Personal Portfolio
+</h3>
+
+<p class="text-slate-300 mb-5">
+
+Responsive portfolio website featuring modern UI,
+animations, project showcase and recruiter-focused design.
+
+</p>
+
+<div class="flex flex-wrap gap-2 mb-5">
+
+<span class="bg-indigo-600 px-3 py-1 rounded-full">
+HTML
+</span>
+
+<span class="bg-indigo-600 px-3 py-1 rounded-full">
+Tailwind CSS
+</span>
+
+<span class="bg-indigo-600 px-3 py-1 rounded-full">
+JavaScript
+</span>
+
+</div>
+
+<a
+href="https://github.com/Vansh745237"
+target="_blank"
+class="text-cyan-400">
+
+View Project →
+
+</a>
+
+</div>
+
+</div>
+
+</div>
+
+</section>
+
+<!-- ACHIEVEMENTS -->
+
+<section
+id="achievements"
+class="section fade">
+
+<div class="max-w-6xl mx-auto px-6">
+
+<h2 class="text-4xl font-bold mb-12 gradient-text">
+Achievements & Certifications
+</h2>
+
+<div class="space-y-6">
+
+<div class="glass p-6 rounded-2xl">
+
+<h3 class="text-xl font-semibold mb-2">
+🏆 AI & Data Science Projects
+</h3>
+
+<p class="text-slate-300">
+Successfully built and deployed multiple AI-powered applications
+including Forest Fire Prediction and NutriScope.
+</p>
+
+</div>
+
+<div class="glass p-6 rounded-2xl">
+
+<h3 class="text-xl font-semibold mb-2">
+💻 Full Stack Development
+</h3>
+
+<p class="text-slate-300">
+Developed modern web applications using React,
+FastAPI, JavaScript and cloud deployment platforms.
+</p>
+
+</div>
+
+<div class="glass p-6 rounded-2xl">
+
+<h3 class="text-xl font-semibold mb-2">
+📚 Continuous Learning
+</h3>
+
+<p class="text-slate-300">
+Actively learning Machine Learning, Data Science,
+Generative AI and software engineering best practices.
+</p>
+
+</div>
+
+</div>
+
+</div>
+
+</section>
+<!-- CONTACT -->
+
+<section
+id="contact"
+class="section fade">
+
+<div class="max-w-6xl mx-auto px-6">
+
+<h2 class="text-4xl font-bold mb-12 gradient-text">
+Contact Me
+</h2>
+
+<div class="grid md:grid-cols-2 gap-10">
+
+<!-- FORM -->
+
+<div class="glass p-8 rounded-3xl">
+
+<form>
+
+<input
+type="text"
+placeholder="Your Name"
+class="w-full p-4 rounded-xl bg-slate-800 mb-4 outline-none">
+
+<input
+type="email"
+placeholder="Your Email"
+class="w-full p-4 rounded-xl bg-slate-800 mb-4 outline-none">
+
+<textarea
+rows="5"
+placeholder="Your Message"
+class="w-full p-4 rounded-xl bg-slate-800 mb-4 outline-none"></textarea>
+
+<button
+type="button"
+class="w-full bg-cyan-500 hover:bg-cyan-600 p-4 rounded-xl font-semibold">
+
+Send Message
+
+</button>
+
+</form>
+
+</div>
+
+<!-- INFO -->
+
+<div class="glass p-8 rounded-3xl">
+
+<h3 class="text-2xl font-semibold mb-6">
+Let's Connect 🚀
+</h3>
+
+<div class="space-y-4 text-slate-300">
+
+<p>
+📧 vanshbathla125@gmail.com
+</p>
+
+<p>
+💼 LinkedIn:
+<a
+href="https://linkedin.com/in/vansh-bathla-a5a7962b1/"
+target="_blank"
+class="text-cyan-400">
+
+linkedin.com/in/vansh-bathla-a5a7962b1
+
+</a>
+</p>
+
+<p>
+💻 GitHub:
+<a
+href="https://github.com/Vansh745237"
+target="_blank"
+class="text-cyan-400">
+
+github.com/Vansh745237
+
+</a>
+</p>
+
+<p>
+🎓 B.Tech CSE (Data Science)
+</p>
+
+<p>
+🤖 AI • ML • Full Stack Development
+</p>
+
+</div>
+
+</div>
+
+</div>
+
+</div>
+
+</section>
+
+<!-- FOOTER -->
+
+<footer class="border-t border-slate-800 py-8">
+
+<div class="max-w-6xl mx-auto px-6 text-center">
+
+<h3 class="text-xl font-semibold mb-3">
+Vansh Bathla
+</h3>
+
+<p class="text-slate-400">
+Building intelligent solutions through AI, Data Science and Full Stack Development.
+</p>
+
+<p class="text-slate-500 mt-4">
+© 2026 Vansh Bathla. All Rights Reserved.
+</p>
+
+</div>
+
+</footer>
+
+<!-- JAVASCRIPT -->
+
+<script>
+
+/* =====================
+TYPING EFFECT
+===================== */
+
+const texts = [
+"Data Science Enthusiast",
+"GenAI Builder",
+"Full Stack Developer",
+"Machine Learning Explorer",
+"AI Application Developer"
+];
+
+let count = 0;
+let index = 0;
+let currentText = "";
+let letter = "";
+
+(function type(){
+
+if(count === texts.length){
+count = 0;
+}
+
+currentText = texts[count];
+
+letter = currentText.slice(0, ++index);
+
+document.getElementById("typing").textContent = letter;
+
+if(letter.length === currentText.length){
+
+count++;
+
+index = 0;
+
+setTimeout(type,1500);
+
+}else{
+
+setTimeout(type,100);
+
+}
+
+})();
+
+/* =====================
+SCROLL ANIMATION
+===================== */
+
+const observer =
+new IntersectionObserver(entries=>{
+
+entries.forEach(entry=>{
+
+if(entry.isIntersecting){
+
+entry.target.classList.add("show");
+
+}
+
+});
+
+},{
+threshold:0.2
+});
+
+document
+.querySelectorAll(".fade")
+.forEach(el=>observer.observe(el));
+
+/* =====================
+SKILL ANIMATION
+===================== */
+
+window.addEventListener("load",()=>{
+
+document
+.querySelectorAll(".skill")
+.forEach(skill=>{
+
+skill.style.width =
+skill.dataset.width;
+
+});
+
+});
+
+/* =====================
+ACTIVE NAVIGATION
+===================== */
+
+const sections =
+document.querySelectorAll("section");
+
+const navLinks =
+document.querySelectorAll(".nav-link");
+
+window.addEventListener("scroll",()=>{
+
+let current = "";
+
+sections.forEach(section=>{
+
+const sectionTop =
+section.offsetTop - 150;
+
+if(scrollY >= sectionTop){
+
+current =
+section.getAttribute("id");
+
+}
+
+});
+
+navLinks.forEach(link=>{
+
+link.classList.remove(
+"active-link"
+);
+
+if(
+link.getAttribute("href")
+.includes(current)
+){
+
+link.classList.add(
+"active-link"
+);
+
+}
+
+});
+
+});
+
+/* =====================
+DARK / LIGHT MODE
+===================== */
+
+const themeBtn =
+document.getElementById("themeBtn");
+
+let darkMode = true;
+
+themeBtn.addEventListener("click",()=>{
+
+if(darkMode){
+
+document.body.style.background =
+"#ffffff";
+
+document.body.style.color =
+"#111827";
+
+themeBtn.innerHTML = "☀️";
+
+}else{
+
+document.body.style.background =
+"#020617";
+
+document.body.style.color =
+"#ffffff";
+
+themeBtn.innerHTML = "🌙";
+
+}
+
+darkMode = !darkMode;
+
+});
+
+</script>
+
+</body>
+</html>
