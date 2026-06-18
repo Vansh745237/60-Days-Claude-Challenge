@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Fuel Analytics Dashboard</title>
+
+<style>
+:root{
+--bg:#0a0f1e;
+--glass:rgba(255,255,255,0.08);
+--border:rgba(255,255,255,0.12);
+
+--e85:#ffb020;
+--petrol:#4da3ff;
+--diesel:#9aa0a6;
+--cng:#35c46b;
+--ev:#9b5cff;
+}
+
+*{
+margin:0;
+padding:0;
+box-sizing:border-box;
+font-family:Inter,Arial,sans-serif;
+}
+
+body{
+background:var(--bg);
+color:white;
+padding:20px;
+}
+
+.container{
+max-width:1400px;
+margin:auto;
+}
+
+.glass{
+background:var(--glass);
+backdrop-filter:blur(14px);
+border:1px solid var(--border);
+border-radius:20px;
+}
+
+.header{
+padding:20px;
+margin-bottom:20px;
+}
+
+.header h1{
+font-size:28px;
+}
+
+.kpis{
+display:grid;
+grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
+gap:15px;
+margin-bottom:20px;
+}
+
+.kpi{
+padding:18px;
+}
+
+.kpi .label{
+opacity:.7;
+font-size:14px;
+margin-bottom:10px;
+}
+
+.kpi .value{
+font-size:30px;
+font-weight:700;
+}
+
+.section{
+margin-bottom:20px;
+padding:20px;
+}
+
+.two-col{
+display:grid;
+grid-template-columns:1fr 1fr;
+gap:20px;
+}
+
+svg{
+width:100%;
+height:auto;
+}
+
+.fuel-grid{
+display:grid;
+grid-template-columns:repeat(auto-fit,minmax(250px,1fr));
+gap:15px;
+}
+
+.fuel-card{
+padding:18px;
+}
+
+.petrol-glow{
+box-shadow:0 0 25px rgba(77,163,255,.7);
+border:1px solid rgba(77,163,255,.8);
+}
+
+h2{
+margin-bottom:15px;
+}
+
+table{
+width:100%;
+border-collapse:collapse;
+}
+
+td,th{
+padding:10px;
+border-bottom:1px solid rgba(255,255,255,.08);
+text-align:left;
+}
+
+.verdict{
+font-size:20px;
+font-weight:700;
+color:var(--e85);
+text-align:center;
+margin-top:15px;
+}
+
+.tooltip{
+position:fixed;
+background:#111827;
+padding:8px 12px;
+border-radius:8px;
+font-size:12px;
+display:none;
+pointer-events:none;
+z-index:999;
+}
+
+@media(max-width:900px){
+.two-col{
+grid-template-columns:1fr;
+}
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+<div class="glass header">
+<h1>JUPITER ZX · Petrol · Age:4y · 500km/mo</h1>
+</div>
+
+<div class="kpis">
+
+<div class="glass kpi">
+<div class="label">Your Fuel Cost/km</div>
+<div class="value">₹6.15</div>
+</div>
+
+<div class="glass kpi">
+<div class="label">E85 Cost/km</div>
+<div class="value">₹6.37</div>
+</div>
+
+<div class="glass kpi">
+<div class="label">E85 Premium vs Petrol</div>
+<div class="value">+3.57%</div>
+</div>
+
+<div class="glass kpi">
+<div class="label">Break-even Price</div>
+<div class="value">₹79.11</div>
+</div>
+
+<div class="glass kpi">
+<div class="label">Your Monthly Cost</div>
+<div class="value">₹3,077</div>
+</div>
+
+</div>
+
+<div class="two-col">
+
+<div class="glass section">
+
+<h2>Cost/km by Fuel</h2>
+
+<svg viewBox="0 0 500 260">
+
+<line x1="40" y1="220" x2="480" y2="220" stroke="white"/>
+
+<rect x="60" y="114" width="55" height="106" fill="#35c46b"/>
+<rect x="145" y="71" width="55" height="149" fill="#9aa0a6"/>
+<rect x="230" y="16" width="55" height="204" fill="#ffb020"/>
+<rect x="315" y="164" width="55" height="56" fill="#9b5cff"/>
+<rect x="400" y="23" width="55" height="197" fill="#4da3ff"/>
+
+<text x="70" y="245" fill="white">CNG</text>
+<text x="150" y="245" fill="white">Diesel</text>
+<text x="235" y="245" fill="white">E85</text>
+<text x="325" y="245" fill="white">EV</text>
+<text x="400" y="245" fill="white">Petrol</text>
+
+</svg>
+
+</div>
+
+<div class="glass section">
+
+<h2>CO₂/km by Fuel</h2>
+
+<svg id="donut" viewBox="0 0 320 320">
+
+<circle cx="160" cy="160" r="90"
+fill="none"
+stroke="#35c46b"
+stroke-width="40"
+stroke-dasharray="120 565"/>
+
+<circle cx="160" cy="160" r="90"
+fill="none"
+stroke="#9aa0a6"
+stroke-width="40"
+stroke-dasharray="171 565"
+stroke-dashoffset="-120"/>
+
+<circle cx="160" cy="160" r="90"
+fill="none"
+stroke="#ffb020"
+stroke-width="40"
+stroke-dasharray="67 565"
+stroke-dashoffset="-291"/>
+
+<circle cx="160" cy="160" r="90"
+fill="none"
+stroke="#9b5cff"
+stroke-width="40"
+stroke-dasharray="87 565"
+stroke-dashoffset="-358"/>
+
+<circle cx="160" cy="160" r="90"
+fill="none"
+stroke="#4da3ff"
+stroke-width="40"
+stroke-dasharray="163 565"
+stroke-dashoffset="-445"/>
+
+<text x="160" y="165" fill="white" text-anchor="middle">CO₂/km</text>
+
+</svg>
+
+</div>
+
+</div>
+
+<div class="glass section">
+
+<h2>Age Bucket Analysis (Petrol)</h2>
+
+<table>
+
+<tr>
+<th>Bucket</th>
+<th>Cost/km</th>
+<th>Maint/km</th>
+</tr>
+
+<tr>
+<td>New (0-2y)</td>
+<td>NA</td>
+<td>NA</td>
+</tr>
+
+<tr style="background:rgba(255,176,32,.15)">
+<td>Mid-life (3-5y) ← Current</td>
+<td>₹5.849</td>
+<td>₹0.568</td>
+</tr>
+
+<tr>
+<td>Aged (6-9y)</td>
+<td>₹6.328</td>
+<td>₹0.408</td>
+</tr>
+
+<tr>
+<td>Old (10+y)</td>
+<td>NA</td>
+<td>NA</td>
+</tr>
+
+</table>
+
+</div>
+
+<div class="glass section">
+
+<h2>E85 Score Gauge</h2>
+
+<svg viewBox="0 0 240 140">
+
+<path
+d="M20 120 A100 100 0 0 1 220 120"
+fill="none"
+stroke="#24314f"
+stroke-width="18"/>
+
+<path
+d="M20 120 A100 100 0 0 1 220 120"
+fill="none"
+stroke="#ffb020"
+stroke-width="18"
+stroke-dasharray="259"
+stroke-dashoffset="152">
+
+<animate
+attributeName="stroke-dashoffset"
+from="259"
+to="152"
+dur="2s"
+fill="freeze"/>
+
+</path>
+
+<text x="120" y="105"
+text-anchor="middle"
+fill="white"
+font-size="32">
+4.15/10
+</text>
+
+</svg>
+
+<div class="verdict">
+E85 reduces emissions significantly but remains slightly costlier per km than Petrol.
+</div>
+
+<br>
+
+<center>
+Pump Saving: <b>18.00%</b> |
+Running Penalty: <b>3.57%</b> |
+Break-even: <b>₹79.11</b>
+</center>
+
+</div>
+
+<div class="fuel-grid">
+
+<div class="glass fuel-card petrol-glow">
+<h3>Petrol (E20)</h3>
+<p>✅ Easy availability</p>
+<p>✅ Fast refueling</p>
+<p>❌ Higher emissions</p>
+<p>❌ Higher running cost than EV/CNG</p>
+<p><b>🚗 Best For:</b> Mixed city + highway</p>
+</div>
+
+<div class="glass fuel-card">
+<h3>E85 Flex Fuel</h3>
+<p>✅ Lower CO₂</p>
+<p>✅ Lower pump price</p>
+<p>❌ Slightly higher cost/km</p>
+<p>❌ Limited pumps</p>
+<p><b>🚗 Best For:</b> Eco-conscious users</p>
+</div>
+
+<div class="glass fuel-card">
+<h3>CNG</h3>
+<p>✅ Lowest fuel cost</p>
+<p>✅ Lower emissions</p>
+<p>❌ Tank space</p>
+<p>❌ Refueling queues</p>
+<p><b>🚗 Best For:</b> High city usage</p>
+</div>
+
+<div class="glass fuel-card">
+<h3>Diesel</h3>
+<p>✅ Efficient highway runs</p>
+<p>✅ High torque</p>
+<p>❌ Higher maintenance</p>
+<p>❌ More emissions</p>
+<p><b>🚗 Best For:</b> Long-distance travel</p>
+</div>
+
+<div class="glass fuel-card">
+<h3>Electric (EV)</h3>
+<p>✅ Lowest running cost</p>
+<p>✅ Lowest maintenance</p>
+<p>❌ Long charging time</p>
+<p>❌ Charger dependency</p>
+<p><b>🚗 Best For:</b> Urban commuting</p>
+</div>
+
+</div>
+
+</div>
+
+<div id="tooltip" class="tooltip"></div>
+
+<script>
+
+const tooltip=document.getElementById("tooltip");
+
+const values=[
+"CNG : 0.1253 kg/km",
+"Diesel : 0.1787 kg/km",
+"E85 : 0.0698 kg/km",
+"EV : 0.0912 kg/km",
+"Petrol : 0.1706 kg/km"
+];
+
+document.querySelectorAll("#donut circle").forEach((el,i)=>{
+
+el.addEventListener("mousemove",(e)=>{
+
+tooltip.style.display="block";
+tooltip.style.left=e.pageX+10+"px";
+tooltip.style.top=e.pageY+10+"px";
+tooltip.innerHTML=values[i];
+
+});
+
+el.addEventListener("mouseleave",()=>{
+
+tooltip.style.display="none";
+
+});
+
+});
+
+</script>
+
+</body>
+</html>
