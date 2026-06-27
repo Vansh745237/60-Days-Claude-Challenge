@@ -66,7 +66,7 @@ This project was built as part of the **Day 25 AI Challenge**.
 
 ## ❓ Investor Questions
 
-<img width="958" height="223" alt="image" src="https://github.com/user-attachments/assets/1fbf4fa3-6aa3-4f80-8144-217b5e8a0927" />
+<img width="956" height="377" alt="Screenshot 2026-06-27 180117" src="https://github.com/user-attachments/assets/05a8fb81-1733-4050-ab60-5ea866daac56" />
 
 ---
 
@@ -92,29 +92,12 @@ This project was built as part of the **Day 25 AI Challenge**.
 
 ## 📄 Downloaded Pitch Report
 
-![Report](screenshots/report.png)
+<img width="229" height="321" alt="Screenshot 2026-06-27 181319" src="https://github.com/user-attachments/assets/b7bd9509-2448-4e1d-9803-795836004fa8" />
+<img width="232" height="136" alt="Screenshot 2026-06-27 181327" src="https://github.com/user-attachments/assets/abda109a-4753-4604-afb3-8f21abd51c56" />
+
 
 ---
 
-# ▶️ How to Run
-
-1. Download or clone this repository.
-
-```bash
-git clone https://github.com/your-username/your-repository.git
-```
-
-2. Open the **Day25** folder.
-
-3. Double-click:
-
-```
-AI_Shark_Tank_Simulator.html
-```
-
-or open it using any modern browser.
-
----
 
 # 🧪 How It Works
 
@@ -176,7 +159,6 @@ Through this project I learned:
 **Vansh Bathla**
 
 - GitHub: https://github.com/Vansh745237
-- LinkedIn: *(Add your LinkedIn profile here)*
 
 ---
 
