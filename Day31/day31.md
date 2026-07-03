@@ -86,7 +86,7 @@ Each alert includes:
 
 ## 📸 Screenshots
 
-<img width="1536" height="1024" alt="ChatGPT Image Jul 3, 2026, 10_59_36 PM" src="https://github.com/user-attachments/assets/fd71feb3-9f27-4e3d-b640-07be2e444d6f" />
+<img width="1536" height="1024" alt="ChatGPT Image Jul 3, 2026, 11_10_45 PM" src="https://github.com/user-attachments/assets/a09c3e4b-5fe3-4ff4-b2e0-1a83042545f1" />
 
 
 ---
