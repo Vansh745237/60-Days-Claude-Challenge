@@ -1,0 +1,1018 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🧩 Prompt Puzzle — Master AI Prompting Through Play</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap');
+
+  :root{
+    --bg:#0a0b0f;
+    --bg-panel:#12141a;
+    --bg-panel-2:#181b22;
+    --border:#262a33;
+    --amber:#f5a623;
+    --amber-soft:#f5a62333;
+    --coral:#ff6b5e;
+    --coral-soft:#ff6b5e33;
+    --cobalt:#5b8def;
+    --text:#e8e9ed;
+    --text-dim:#9a9ea9;
+    --text-faint:#5f6470;
+    --good:#5ecb8f;
+    --bad:#ff6b5e;
+    --radius:14px;
+    --shadow: 0 8px 30px rgba(0,0,0,0.45);
+  }
+  *{box-sizing:border-box;}
+  html,body{height:100%;}
+  body{
+    margin:0;
+    background:
+      radial-gradient(circle at 15% 0%, #1a1420 0%, transparent 40%),
+      radial-gradient(circle at 85% 10%, #101a24 0%, transparent 45%),
+      var(--bg);
+    color:var(--text);
+    font-family:'Inter', sans-serif;
+    min-height:100vh;
+    -webkit-font-smoothing:antialiased;
+  }
+  h1,h2,h3,.serif{font-family:'Fraunces', serif;}
+  .mono{font-family:'JetBrains Mono', monospace;}
+  #app{max-width:1080px;margin:0 auto;padding:28px 20px 80px;}
+
+  .topbar{
+    display:flex;align-items:center;justify-content:space-between;
+    margin-bottom:26px; flex-wrap:wrap; gap:12px;
+  }
+  .brand{display:flex;align-items:center;gap:10px;}
+  .brand .logo{font-size:28px;}
+  .brand h1{font-size:20px;margin:0;font-weight:700;letter-spacing:0.2px;}
+  .brand .tag{font-size:12px;color:var(--text-dim);margin-top:2px;}
+  .badgebar{display:flex;gap:8px;flex-wrap:wrap;}
+  .pill{
+    font-size:12px;padding:6px 12px;border-radius:999px;
+    background:var(--bg-panel-2);border:1px solid var(--border);
+    color:var(--text-dim);
+  }
+  .pill.amber{color:var(--amber);border-color:var(--amber-soft);}
+  .pill.coral{color:var(--coral);border-color:var(--coral-soft);}
+
+  .panel{
+    background:linear-gradient(180deg, var(--bg-panel), var(--bg-panel-2));
+    border:1px solid var(--border);
+    border-radius:var(--radius);
+    box-shadow:var(--shadow);
+    padding:28px;
+    margin-bottom:20px;
+    position:relative;
+    overflow:hidden;
+  }
+  .panel::before{
+    content:"";position:absolute;top:0;left:0;right:0;height:2px;
+    background:linear-gradient(90deg, var(--amber), var(--coral), var(--cobalt));
+    opacity:0.8;
+  }
+
+  /* Start screen */
+  .start-hero h2{font-size:30px;margin:0 0 8px;}
+  .start-hero p{color:var(--text-dim);line-height:1.6;font-size:14.5px;max-width:620px;}
+  .config-row{display:flex;gap:14px;margin:22px 0;flex-wrap:wrap;}
+  .config-card{
+    flex:1;min-width:200px;background:var(--bg-panel-2);
+    border:1px solid var(--border);border-radius:10px;padding:16px 18px;
+  }
+  .config-card .k{font-size:11px;text-transform:uppercase;letter-spacing:1px;color:var(--text-faint);margin-bottom:6px;}
+  .config-card .v{font-size:16px;font-weight:600;color:var(--amber);}
+  .btn{
+    appearance:none;border:none;cursor:pointer;
+    padding:13px 26px;border-radius:10px;font-size:14.5px;font-weight:600;
+    background:linear-gradient(135deg, var(--amber), var(--coral));
+    color:#160f08;transition:transform .15s ease, box-shadow .15s ease;
+    box-shadow:0 4px 18px rgba(245,166,35,0.25);
+  }
+  .btn:hover{transform:translateY(-2px);box-shadow:0 8px 26px rgba(245,166,35,0.35);}
+  .btn:active{transform:translateY(0);}
+  .btn.secondary{
+    background:var(--bg-panel-2);color:var(--text);border:1px solid var(--border);
+    box-shadow:none;
+  }
+  .btn.secondary:hover{border-color:var(--amber-soft);}
+  .btn.ghost{background:transparent;color:var(--text-dim);box-shadow:none;padding:10px 16px;border:1px solid var(--border);}
+  .btn:disabled{opacity:0.4;cursor:not-allowed;transform:none;box-shadow:none;}
+
+  .howto{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px;margin-top:8px;}
+  .howto .item{background:var(--bg-panel-2);border:1px solid var(--border);border-radius:10px;padding:14px 16px;}
+  .howto .item .n{color:var(--coral);font-family:'JetBrains Mono';font-size:12px;}
+  .howto .item .t{font-weight:600;margin:4px 0 2px;font-size:14px;}
+  .howto .item .d{font-size:12.5px;color:var(--text-dim);line-height:1.5;}
+
+  /* Progress bar */
+  .progress-wrap{display:flex;align-items:center;gap:14px;margin-bottom:18px;}
+  .progress-track{flex:1;height:8px;border-radius:6px;background:var(--bg-panel-2);border:1px solid var(--border);overflow:hidden;}
+  .progress-fill{height:100%;background:linear-gradient(90deg,var(--amber),var(--coral));width:0%;transition:width .5s ease;}
+  .progress-label{font-size:12px;color:var(--text-dim);white-space:nowrap;}
+
+  .scoreboard{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:18px;}
+  .stat{
+    background:var(--bg-panel-2);border:1px solid var(--border);border-radius:10px;
+    padding:10px 14px;min-width:88px;text-align:center;
+  }
+  .stat .lab{font-size:10px;text-transform:uppercase;letter-spacing:0.8px;color:var(--text-faint);}
+  .stat .val{font-family:'JetBrains Mono';font-size:17px;font-weight:700;color:var(--amber);margin-top:2px;transition:transform .2s;}
+  .stat .val.bump{transform:scale(1.25);color:var(--coral);}
+
+  /* Round header */
+  .round-head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap;margin-bottom:6px;}
+  .chal-type{
+    display:inline-block;font-size:11px;padding:4px 10px;border-radius:999px;margin-bottom:10px;
+    background:var(--coral-soft);color:var(--coral);font-weight:600;letter-spacing:0.3px;
+  }
+  .scenario-title{font-size:21px;margin:0 0 6px;}
+  .desired{background:var(--bg-panel-2);border:1px dashed var(--border);border-radius:10px;padding:12px 14px;font-size:13px;color:var(--text-dim);margin:12px 0 20px;line-height:1.55;}
+  .desired b{color:var(--text);}
+
+  /* Build the prompt */
+  .zone-label{font-size:11px;text-transform:uppercase;letter-spacing:1px;color:var(--text-faint);margin:18px 0 8px;}
+  .pool{display:flex;flex-wrap:wrap;gap:10px;min-height:56px;padding:10px;background:var(--bg-panel-2);border:1px solid var(--border);border-radius:10px;}
+  .dropzone{min-height:120px;padding:10px;background:var(--bg-panel-2);border:2px dashed var(--border);border-radius:10px;display:flex;flex-direction:column;gap:8px;transition:border-color .15s;}
+  .dropzone.dragover{border-color:var(--amber);background:var(--amber-soft);}
+  .chip{
+    background:var(--bg-panel);border:1px solid var(--border);border-radius:8px;
+    padding:9px 13px;font-size:13px;cursor:grab;user-select:none;
+    transition:transform .12s, border-color .12s, box-shadow .12s;
+    max-width:100%;
+  }
+  .chip:hover{border-color:var(--amber-soft);transform:translateY(-1px);}
+  .chip.dragging{opacity:0.4;}
+  .chip.in-zone{cursor:grab;display:flex;align-items:center;justify-content:space-between;gap:10px;}
+  .chip .rm{color:var(--text-faint);cursor:pointer;font-size:15px;padding:0 4px;}
+  .chip .rm:hover{color:var(--coral);}
+  .chip.correct-flag{border-color:var(--good);}
+  .chip.wrong-flag{border-color:var(--bad);}
+
+  /* Clean the prompt */
+  .clean-list{display:flex;flex-direction:column;gap:8px;}
+  .clean-line{
+    display:flex;align-items:center;gap:12px;background:var(--bg-panel-2);
+    border:1px solid var(--border);border-radius:10px;padding:11px 14px;
+    cursor:pointer;transition:border-color .12s, opacity .12s;
+  }
+  .clean-line:hover{border-color:var(--amber-soft);}
+  .clean-line .tagbtn{
+    font-size:10.5px;font-weight:700;padding:4px 9px;border-radius:6px;
+    background:var(--bg-panel);color:var(--text-dim);white-space:nowrap;border:1px solid var(--border);
+  }
+  .clean-line.cut{opacity:0.45;}
+  .clean-line.cut .txt{text-decoration:line-through;}
+  .clean-line.cut .tagbtn{background:var(--coral-soft);color:var(--coral);border-color:transparent;}
+  .clean-line.keep .tagbtn{background:rgba(94,203,143,0.15);color:var(--good);border-color:transparent;}
+  .clean-line .txt{font-size:13.5px;line-height:1.5;flex:1;}
+
+  /* Choose the best */
+  .choice-grid{display:grid;grid-template-columns:1fr;gap:14px;}
+  .choice-card{
+    background:var(--bg-panel-2);border:2px solid var(--border);border-radius:12px;
+    padding:16px 18px;cursor:pointer;transition:border-color .15s, transform .15s;
+  }
+  .choice-card:hover{border-color:var(--amber-soft);transform:translateY(-2px);}
+  .choice-card .lbl{font-family:'JetBrains Mono';font-size:11px;color:var(--text-faint);margin-bottom:6px;}
+  .choice-card .body{font-size:13.5px;line-height:1.6;color:var(--text);white-space:pre-wrap;}
+  .choice-card.selected{border-color:var(--amber);}
+  .choice-card.right{border-color:var(--good);background:rgba(94,203,143,0.06);}
+  .choice-card.wrong{border-color:var(--bad);background:rgba(255,107,94,0.06);}
+
+  .action-row{display:flex;justify-content:space-between;align-items:center;margin-top:24px;flex-wrap:wrap;gap:12px;}
+  .left-actions{display:flex;gap:10px;}
+
+  .feedback-box{
+    margin-top:18px;padding:16px 18px;border-radius:10px;border:1px solid var(--border);
+    background:var(--bg-panel-2); font-size:13.5px; line-height:1.6; display:none;
+  }
+  .feedback-box.show{display:block;}
+  .feedback-box .princ{color:var(--amber);font-weight:600;margin-top:8px;display:block;}
+  .compare-cols{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:12px;}
+  .compare-cols .c{background:var(--bg-panel);border:1px solid var(--border);border-radius:8px;padding:10px 12px;font-size:12.5px;}
+  .compare-cols .c .h{font-size:10.5px;text-transform:uppercase;letter-spacing:0.6px;color:var(--text-faint);margin-bottom:5px;}
+  @media (max-width:600px){.compare-cols{grid-template-columns:1fr;}}
+
+  /* toasts */
+  #toast-wrap{position:fixed;top:20px;right:20px;display:flex;flex-direction:column;gap:10px;z-index:999;}
+  .toast{
+    background:var(--bg-panel);border:1px solid var(--border);border-left:3px solid var(--amber);
+    border-radius:8px;padding:12px 16px;font-size:13px;box-shadow:var(--shadow);
+    animation:slidein .3s ease, fadeout .4s ease 2.6s forwards;
+    max-width:280px;
+  }
+  .toast.bad{border-left-color:var(--coral);}
+  .toast.good{border-left-color:var(--good);}
+  @keyframes slidein{from{transform:translateX(30px);opacity:0;}to{transform:translateX(0);opacity:1;}}
+  @keyframes fadeout{to{opacity:0;transform:translateX(20px);}}
+
+  /* report screen */
+  .report-hero{text-align:center;padding:10px 0 6px;}
+  .report-hero .score-big{font-family:'JetBrains Mono';font-size:64px;font-weight:700;color:var(--amber);line-height:1;margin:6px 0;}
+  .report-hero .rating{font-size:20px;font-weight:700;font-family:'Fraunces';}
+  .report-hero .rank{margin-top:4px;font-size:13px;color:var(--text-dim);}
+  .dna-wrap{margin:26px 0;}
+  .dna-row{display:flex;align-items:center;gap:12px;margin-bottom:12px;}
+  .dna-row .lab{width:140px;font-size:12.5px;color:var(--text-dim);flex-shrink:0;}
+  .dna-track{flex:1;height:10px;border-radius:6px;background:var(--bg-panel-2);border:1px solid var(--border);overflow:hidden;}
+  .dna-fill{height:100%;border-radius:6px;background:linear-gradient(90deg,var(--cobalt),var(--amber));width:0%;transition:width 1s ease;}
+  .dna-val{width:38px;text-align:right;font-family:'JetBrains Mono';font-size:12px;color:var(--text-dim);}
+
+  .metrics-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin:20px 0;}
+  .metric-card{background:var(--bg-panel-2);border:1px solid var(--border);border-radius:10px;padding:14px;text-align:center;}
+  .metric-card .lab{font-size:10.5px;text-transform:uppercase;color:var(--text-faint);letter-spacing:0.6px;}
+  .metric-card .val{font-family:'JetBrains Mono';font-size:20px;font-weight:700;color:var(--text);margin-top:4px;}
+
+  .feedback-final{background:var(--bg-panel-2);border:1px solid var(--border);border-radius:10px;padding:16px 18px;font-size:13.5px;line-height:1.65;margin:18px 0;}
+  .feedback-final b{color:var(--amber);}
+  .milestone{border-left:3px solid var(--coral);padding-left:12px;font-size:13.5px;color:var(--text-dim);margin:14px 0;}
+  .final-prompt{background:var(--bg-panel);border:1px solid var(--border);border-radius:10px;padding:16px 18px;font-family:'JetBrains Mono';font-size:12.5px;line-height:1.7;color:var(--good);white-space:pre-wrap;margin-top:8px;}
+
+  .hidden{display:none !important;}
+  ::-webkit-scrollbar{width:8px;}
+  ::-webkit-scrollbar-thumb{background:var(--border);border-radius:6px;}
+</style>
+</head>
+<body>
+<div id="toast-wrap"></div>
+<div id="app">
+
+  <div class="topbar">
+    <div class="brand">
+      <div class="logo">🧩</div>
+      <div>
+        <h1>Prompt Puzzle</h1>
+        <div class="tag">Master AI Prompting Through Play</div>
+      </div>
+    </div>
+    <div class="badgebar">
+      <span class="pill amber">Domain: Data / Research Analysis</span>
+      <span class="pill coral">Difficulty: Intermediate</span>
+    </div>
+  </div>
+
+  <!-- START SCREEN -->
+  <div class="panel start-hero" id="screen-start">
+    <h2>Ready to sharpen your prompting instincts?</h2>
+    <p>You'll work through 6 randomized data-analysis scenarios. Each one tests a different prompting skill —
+    building a prompt from scratch, cleaning up a bloated one, or picking the best of three. Your accuracy, speed,
+    moves and hint usage all feed into a final Prompt Performance Report at the end.</p>
+
+    <div class="config-row">
+      <div class="config-card"><div class="k">Domain</div><div class="v">Data / Research Analysis</div></div>
+      <div class="config-card"><div class="k">Difficulty</div><div class="v">Intermediate</div></div>
+      <div class="config-card"><div class="k">Scenarios</div><div class="v" id="scenario-count-preview">6</div></div>
+    </div>
+
+    <div class="howto">
+      <div class="item"><div class="n">01</div><div class="t">Build the Prompt</div><div class="d">Drag the correct prompt blocks into the drop zone, ignore the distractors, keep sensible order.</div></div>
+      <div class="item"><div class="n">02</div><div class="t">Clean the Prompt</div><div class="d">A bloated prompt is shown line by line. Mark each line Keep or Cut to distill it down.</div></div>
+      <div class="item"><div class="n">03</div><div class="t">Choose the Best</div><div class="d">Three full prompt variants — weak, optimized, over-engineered. Pick the one that works best.</div></div>
+    </div>
+
+    <div style="margin-top:24px;">
+      <button class="btn" onclick="startGame()">Start Puzzle →</button>
+    </div>
+  </div>
+
+  <!-- GAME SCREEN -->
+  <div class="hidden" id="screen-game">
+    <div class="progress-wrap">
+      <div class="progress-track"><div class="progress-fill" id="progress-fill"></div></div>
+      <div class="progress-label" id="progress-label">Round 1 / 6</div>
+    </div>
+    <div class="scoreboard">
+      <div class="stat"><div class="lab">Score</div><div class="val mono" id="stat-score">0</div></div>
+      <div class="stat"><div class="lab">Accuracy</div><div class="val mono" id="stat-accuracy">0%</div></div>
+      <div class="stat"><div class="lab">Time</div><div class="val mono" id="stat-time">0s</div></div>
+      <div class="stat"><div class="lab">Moves</div><div class="val mono" id="stat-moves">0</div></div>
+      <div class="stat"><div class="lab">Wrong</div><div class="val mono" id="stat-wrong">0</div></div>
+      <div class="stat"><div class="lab">Hints</div><div class="val mono" id="stat-hints">0</div></div>
+    </div>
+
+    <div class="panel" id="round-panel">
+      <!-- populated by JS -->
+    </div>
+  </div>
+
+  <!-- REPORT SCREEN -->
+  <div class="hidden" id="screen-report">
+    <div class="panel report-hero">
+      <div style="font-size:13px;color:var(--text-dim);">PROMPT PERFORMANCE REPORT</div>
+      <div class="score-big mono" id="report-score">0</div>
+      <div class="rating" id="report-rating">—</div>
+      <div class="rank" id="report-rank">—</div>
+    </div>
+
+    <div class="panel">
+      <h3 style="margin-top:0;">Prompt DNA</h3>
+      <div class="dna-wrap" id="dna-wrap"></div>
+    </div>
+
+    <div class="panel">
+      <h3 style="margin-top:0;">Round Metrics</h3>
+      <div class="metrics-grid" id="metrics-grid"></div>
+    </div>
+
+    <div class="panel">
+      <h3 style="margin-top:0;">Personalized Feedback</h3>
+      <div class="feedback-final" id="feedback-final"></div>
+      <div class="milestone" id="milestone"></div>
+    </div>
+
+    <div class="panel">
+      <h3 style="margin-top:0;">Your Best Optimized Prompt</h3>
+      <div class="final-prompt" id="final-prompt"></div>
+    </div>
+
+    <div style="text-align:center;margin-top:10px;">
+      <button class="btn" onclick="replayGame()">🔁 Replay with New Scenarios</button>
+    </div>
+  </div>
+
+</div>
+
+<script>
+/* ============================= DATA ============================= */
+const SCENARIOS = [
+  {
+    id:'sales_trend',
+    title:'Quarterly Sales Trend Analysis',
+    desired:'A concise executive summary identifying the top 3 sales trends from quarterly data, formatted as bullet points, each with a cause and a recommendation.',
+    correct:[
+      "Role: Act as a senior data analyst preparing insights for executives.",
+      "Task: Analyze the attached quarterly sales dataset to identify the top 3 trends.",
+      "Context: This will be presented to non-technical stakeholders in a board meeting.",
+      "Constraints: Focus only on statistically significant trends; ignore one-off outliers.",
+      "Format: Present findings as 3 bullet points, each with a one-line cause and a recommendation.",
+      "Output limit: Keep the entire response under 150 words."
+    ],
+    distract:[
+      "Write a poem about rising sales.",
+      "Include the full raw dataset in your response.",
+      "Use as much technical jargon as possible.",
+      "Give a generic answer without looking at the data."
+    ],
+    weak:"Look at the sales data and tell me what's happening.",
+    optimized:"Act as a senior data analyst preparing insights for executives. Analyze the attached quarterly sales dataset to identify the top 3 trends. This will be presented to non-technical stakeholders in a board meeting, so focus only on statistically significant trends and ignore one-off outliers. Present findings as 3 bullet points, each with a one-line cause and a recommendation, and keep the entire response under 150 words.",
+    over:"You are the greatest data analyst who has ever lived and you must analyze absolutely everything about this sales data including every possible angle, historical context back to the company's founding, competitor comparisons, macroeconomic factors, and also write it as a single word, also as a 2000-word essay, also as a table, also as a poem, using maximum technical jargon so it sounds impressive, and also keep it extremely short, and cover all 50 possible trends you can find no matter how small, and don't worry about whether they're statistically meaningful, just list everything.",
+    weakOutput:"Sales are going up in some areas and down in others. There are a few things happening that might be interesting depending on how you look at it.",
+    optOutput:"• Trend 1: North region revenue up 18% — driven by the new retail partnership. Recommend expanding the partnership to the East region.\n• Trend 2: Online conversion dipped 6% — linked to a checkout page change. Recommend reverting the change and A/B testing alternatives.\n• Trend 3: Repeat purchase rate up 11% — likely from the loyalty program. Recommend increasing loyalty program budget next quarter.",
+    principle:"Specify role, task, context, format, and constraints together — vague prompts yield vague outputs, and contradictory formatting requests (short AND long, jargon AND simple) confuse the model rather than helping it."
+  },
+  {
+    id:'survey_summary',
+    title:'Customer Survey Theme Summary',
+    desired:'A short thematic summary of open-ended survey responses, grouped into 3-4 themes with a sample quote and sentiment for each.',
+    correct:[
+      "Role: You are a UX researcher analyzing customer feedback.",
+      "Task: Read the attached open-ended survey responses and group them into 3-4 recurring themes.",
+      "Context: The product team will use this to prioritize next sprint's work.",
+      "Constraints: Base themes only on responses that appear more than twice; ignore single mentions.",
+      "Format: For each theme, give a title, a 1-sentence summary, an example quote, and overall sentiment.",
+      "Output limit: Keep the summary under 250 words total."
+    ],
+    distract:[
+      "Rewrite every single response individually.",
+      "Add your personal opinion about the product.",
+      "Translate the responses into French.",
+      "Ignore all negative feedback."
+    ],
+    weak:"Summarize these survey responses.",
+    optimized:"You are a UX researcher analyzing customer feedback. Read the attached open-ended survey responses and group them into 3-4 recurring themes; the product team will use this to prioritize next sprint's work. Base themes only on responses that appear more than twice, ignoring single mentions. For each theme, give a title, a 1-sentence summary, an example quote, and overall sentiment. Keep the summary under 250 words total.",
+    over:"Analyze every single customer response one at a time in full detail with no grouping at all, but also group them into exactly 10 themes, but also just give me one theme, and add your own strong personal opinions about whether the product is good, and translate half of it into French for no reason, and make sure to include every single negative comment verbatim in quotes even if it's just one person, and also keep it to one sentence total.",
+    weakOutput:"Customers had mixed feedback. Some liked it, some didn't. There were various comments about pricing and features.",
+    optOutput:"• Onboarding Confusion (negative) — Several users struggled with setup. \"I couldn't find where to start.\"\n• Pricing Concerns (negative) — Repeated mentions that the paid tier feels expensive for small teams.\n• Loved the Mobile App (positive) — Many praised the mobile experience as fast and intuitive.\n• Support Response Time (neutral) — Mixed comments; some praised support, others wanted faster replies.",
+    principle:"Grouping instructions plus explicit format and audience purpose produce structured, decision-ready summaries instead of a vague paragraph."
+  },
+  {
+    id:'ab_test',
+    title:'A/B Test Result Interpretation',
+    desired:'A clear verdict on whether Variant B statistically outperforms Variant A, with a caveat and a recommendation.',
+    correct:[
+      "Role: Act as a data scientist reviewing an A/B test.",
+      "Task: Determine whether Variant B's conversion improvement over Variant A is statistically significant.",
+      "Context: This decision will determine whether Variant B is rolled out to 100% of users.",
+      "Constraints: Only claim significance if p-value is below 0.05; mention sample size limitations if relevant.",
+      "Format: State the verdict first, then a 2-3 sentence explanation, then a clear recommendation.",
+      "Output limit: Maximum 120 words."
+    ],
+    distract:[
+      "Assume the result is significant regardless of the p-value.",
+      "Explain the entire history of A/B testing.",
+      "Add unrelated marketing suggestions about email campaigns.",
+      "Provide the full statistical derivation of the t-test formula."
+    ],
+    weak:"Is B better than A?",
+    optimized:"Act as a data scientist reviewing an A/B test. Determine whether Variant B's conversion improvement over Variant A is statistically significant — this decision will determine whether Variant B is rolled out to 100% of users. Only claim significance if the p-value is below 0.05, and mention sample size limitations if relevant. State the verdict first, then a 2-3 sentence explanation, then a clear recommendation, in no more than 120 words.",
+    over:"Tell me everything there is to know about the history and theory of A/B testing including its origins in agriculture, then assume Variant B automatically wins because it has a higher raw number, then give me a full derivation of the underlying statistical test with every formula, then also recommend three unrelated email marketing tactics, then answer in exactly one word, then also write a full page report, then decide the p-value doesn't matter.",
+    weakOutput:"Yeah B looks a bit higher so it's probably better, go with B.",
+    optOutput:"Verdict: Not yet statistically significant.\nVariant B shows a 2.3% lift over Variant A, but the p-value is 0.11, above the 0.05 threshold, and the sample size (1,200 users) is on the smaller side for this effect size.\nRecommendation: Continue the test for another 1-2 weeks to gather more data before rolling out Variant B.",
+    principle:"Precision on statistical thresholds and decision-first formatting prevents overconfident or misleading conclusions from noisy data."
+  },
+  {
+    id:'correlation_causation',
+    title:'Correlation vs Causation Check',
+    desired:'A careful explanation of whether a data pattern implies causation, naming the likely confounding variable.',
+    correct:[
+      "Role: You are a research analyst who is careful about statistical reasoning.",
+      "Task: Evaluate whether the correlation between ice cream sales and drowning incidents implies causation.",
+      "Context: This will be used to correct a misleading claim in a company newsletter.",
+      "Constraints: Explicitly identify any confounding variables and avoid asserting causation without evidence.",
+      "Format: Answer in 2 short paragraphs — first the verdict, then the reasoning.",
+      "Output limit: Under 130 words."
+    ],
+    distract:[
+      "Confirm that ice cream causes drowning.",
+      "Give a long history of the field of statistics.",
+      "Add unrelated jokes to lighten the tone.",
+      "Include a table of ten unrelated variables."
+    ],
+    weak:"Does ice cream cause drowning?",
+    optimized:"You are a research analyst who is careful about statistical reasoning. Evaluate whether the correlation between ice cream sales and drowning incidents implies causation — this will be used to correct a misleading claim in a company newsletter. Explicitly identify any confounding variables and avoid asserting causation without evidence. Answer in 2 short paragraphs: first the verdict, then the reasoning, in under 130 words.",
+    over:"First confirm outright that ice cream definitely causes drowning since the data shows a clear pattern, then give me the entire 300-year history of the field of statistics starting with its founders, then add a few jokes to keep it fun, then include a big table comparing ten totally unrelated variables like shoe size and coffee consumption, then wrap it all up in exactly one sentence.",
+    weakOutput:"Yes, since ice cream sales go up whenever drownings go up, ice cream must be causing the drownings.",
+    optOutput:"Verdict: No, this correlation does not imply causation.\nBoth ice cream sales and drowning incidents rise in summer, driven by a confounding variable: warmer weather. More people swim and buy ice cream when it's hot, creating a spurious correlation between the two with no direct causal link.",
+    principle:"Naming the risk (correlation vs causation) upfront steers the model away from a common reasoning trap and toward identifying confounders."
+  },
+  {
+    id:'cohort_retention',
+    title:'Cohort Retention Analysis',
+    desired:'Identification of the weakest 30-day retention cohort with a plausible hypothesis, respecting a minimum sample size.',
+    correct:[
+      "Role: Act as a growth analyst studying user retention.",
+      "Task: Identify which monthly signup cohort has the weakest 30-day retention rate from the attached table.",
+      "Context: This informs where the product team should focus a retention experiment next quarter.",
+      "Constraints: Only consider cohorts with at least 500 users to avoid small-sample noise.",
+      "Format: State the weakest cohort, its retention percentage, and one plausible hypothesis for the drop.",
+      "Output limit: Keep it under 100 words."
+    ],
+    distract:[
+      "List every cohort's full data in detail.",
+      "Recommend a completely unrelated marketing campaign.",
+      "Ignore sample size and just pick the lowest raw number.",
+      "Write the response as a rap song."
+    ],
+    weak:"Which cohort has bad retention?",
+    optimized:"Act as a growth analyst studying user retention. Identify which monthly signup cohort has the weakest 30-day retention rate from the attached table, to inform where the product team should focus a retention experiment next quarter. Only consider cohorts with at least 500 users, to avoid small-sample noise. State the weakest cohort, its retention percentage, and one plausible hypothesis for the drop, in under 100 words.",
+    over:"List out every single cohort's complete data with every metric imaginable, then just pick whichever cohort has the single lowest number even if it only has 12 users in it because that's technically the lowest, then also recommend we launch a totally unrelated billboard marketing campaign, then present the whole thing as a rap song with rhyming verses, then also make it one word long.",
+    weakOutput:"March cohort is bad I guess, only 5 users retained.",
+    optOutput:"The March 2026 cohort (612 users) shows the weakest 30-day retention at 24%, well below the 41% average. Hypothesis: this cohort signed up during a promotional discount period, which may have attracted price-sensitive users with lower long-term intent to stay.",
+    principle:"Setting a minimum sample-size constraint avoids drawing confident conclusions from statistically noisy small cohorts."
+  },
+  {
+    id:'lit_synthesis',
+    title:'Research Literature Synthesis',
+    desired:'A concise synthesis of three papers on remote work productivity, noting agreement and disagreement points.',
+    correct:[
+      "Role: You are a research assistant synthesizing academic literature.",
+      "Task: Synthesize the findings of the three attached papers on remote work productivity.",
+      "Context: This synthesis will support a policy recommendation for a hybrid-work pilot program.",
+      "Constraints: Explicitly note where the papers agree and where they disagree; do not present one paper's view as consensus.",
+      "Format: Use two sections — 'Points of Agreement' and 'Points of Disagreement' — each with brief bullet points.",
+      "Output limit: Around 150 words total."
+    ],
+    distract:[
+      "Only summarize the paper you find most convincing.",
+      "Add your personal predictions about the future of work.",
+      "Include full APA citations with page numbers for every sentence.",
+      "Write a full 2000-word literature review."
+    ],
+    weak:"Summarize these papers about remote work.",
+    optimized:"You are a research assistant synthesizing academic literature. Synthesize the findings of the three attached papers on remote work productivity to support a policy recommendation for a hybrid-work pilot program. Explicitly note where the papers agree and where they disagree, and do not present one paper's view as consensus. Use two sections — 'Points of Agreement' and 'Points of Disagreement' — each with brief bullet points, in around 150 words total.",
+    over:"Pick whichever one of the three papers you personally find most convincing and just summarize that one as if it were the full consensus, then add in your own speculative predictions about the future of remote work in general, then cite every single sentence in full APA format with exact page numbers, then expand the whole thing into a full 2000-word literature review essay, then also compress it to a single tweet.",
+    weakOutput:"The papers say remote work is generally good for productivity, based on the first study I looked at.",
+    optOutput:"Points of Agreement:\n• All three papers find remote work improves focus time on individual tasks.\n• All note reduced commute stress as a wellbeing benefit.\n\nPoints of Disagreement:\n• Paper A finds collaboration quality drops significantly; Papers B and C find no measurable drop.\n• Paper C reports productivity gains fade after 6 months, while A and B find them sustained.",
+    principle:"Asking explicitly for agreement/disagreement prevents the model from flattening nuanced or conflicting research into a false consensus."
+  }
+];
+
+const CHALLENGE_TYPES = ['build','clean','choose'];
+
+/* ============================= STATE ============================= */
+let state = {};
+
+function shuffle(arr){
+  const a = arr.slice();
+  for(let i=a.length-1;i>0;i--){
+    const j = Math.floor(Math.random()*(i+1));
+    [a[i],a[j]]=[a[j],a[i]];
+  }
+  return a;
+}
+
+function initRounds(){
+  const scenarios = shuffle(SCENARIOS);
+  const rounds = scenarios.map((sc,i)=>({
+    scenario: sc,
+    type: CHALLENGE_TYPES[i % CHALLENGE_TYPES.length]
+  }));
+  state = {
+    rounds,
+    idx:0,
+    totalScore:0,
+    results:[], // per round result objects
+    roundStart:0,
+    timerId:null,
+    // per-round mutable
+    moves:0,
+    wrongPlacements:0,
+    hintsUsed:0,
+    dropzoneOrder:[],
+    selectedChoice:null,
+    cleanState:{},
+    answered:false
+  };
+}
+
+/* ============================= NAV ============================= */
+function startGame(){
+  initRounds();
+  document.getElementById('screen-start').classList.add('hidden');
+  document.getElementById('screen-report').classList.add('hidden');
+  document.getElementById('screen-game').classList.remove('hidden');
+  renderRound();
+}
+
+function replayGame(){
+  document.getElementById('screen-report').classList.add('hidden');
+  startGame();
+}
+
+/* ============================= TOAST ============================= */
+function toast(msg, kind){
+  const wrap = document.getElementById('toast-wrap');
+  const el = document.createElement('div');
+  el.className = 'toast' + (kind ? ' '+kind : '');
+  el.textContent = msg;
+  wrap.appendChild(el);
+  setTimeout(()=>{ el.remove(); }, 3000);
+}
+
+/* ============================= TIMER ============================= */
+function startTimer(){
+  state.roundStart = Date.now();
+  clearInterval(state.timerId);
+  state.timerId = setInterval(()=>{
+    const secs = Math.floor((Date.now()-state.roundStart)/1000);
+    document.getElementById('stat-time').textContent = secs+'s';
+  }, 500);
+}
+function stopTimer(){
+  clearInterval(state.timerId);
+  return Math.floor((Date.now()-state.roundStart)/1000);
+}
+
+/* ============================= SCOREBOARD ============================= */
+function bumpStat(id){
+  const el = document.getElementById(id);
+  el.classList.add('bump');
+  setTimeout(()=>el.classList.remove('bump'),220);
+}
+function updateScoreboard(){
+  document.getElementById('stat-score').textContent = Math.round(state.totalScore);
+  bumpStat('stat-score');
+  document.getElementById('stat-moves').textContent = state.moves;
+  document.getElementById('stat-wrong').textContent = state.wrongPlacements;
+  document.getElementById('stat-hints').textContent = state.hintsUsed;
+  const results = state.results;
+  const avgAcc = results.length ? Math.round(results.reduce((s,r)=>s+r.accuracy,0)/results.length*100) : 0;
+  document.getElementById('stat-accuracy').textContent = avgAcc+'%';
+  const progressPct = Math.round((state.idx)/state.rounds.length*100);
+  document.getElementById('progress-fill').style.width = progressPct+'%';
+  document.getElementById('progress-label').textContent = `Round ${Math.min(state.idx+1,state.rounds.length)} / ${state.rounds.length}`;
+}
+
+/* ============================= ROUND RENDER ============================= */
+function renderRound(){
+  state.moves = 0;
+  state.wrongPlacements = 0;
+  state.hintsUsed = 0;
+  state.dropzoneOrder = [];
+  state.selectedChoice = null;
+  state.cleanState = {};
+  state.answered = false;
+
+  updateScoreboard();
+  document.getElementById('stat-time').textContent = '0s';
+  startTimer();
+
+  const round = state.rounds[state.idx];
+  const sc = round.scenario;
+  const panel = document.getElementById('round-panel');
+
+  const typeLabels = {build:'🧱 Build the Prompt', clean:'🧹 Clean the Prompt', choose:'🎯 Choose the Best Prompt'};
+
+  let html = `
+    <div class="round-head">
+      <div>
+        <span class="chal-type">${typeLabels[round.type]}</span>
+        <h3 class="scenario-title">${sc.title}</h3>
+      </div>
+    </div>
+    <div class="desired"><b>Desired Output:</b> ${sc.desired}</div>
+  `;
+
+  if(round.type==='build') html += buildChallengeHTML(sc);
+  else if(round.type==='clean') html += cleanChallengeHTML(sc);
+  else html += chooseChallengeHTML(sc);
+
+  html += `
+    <div class="feedback-box" id="feedback-box"></div>
+    <div class="action-row">
+      <div class="left-actions">
+        <button class="btn ghost" onclick="useHint()">💡 Hint (-5 pts)</button>
+      </div>
+      <button class="btn" id="submit-btn" onclick="submitRound()">Check Answer →</button>
+    </div>
+  `;
+
+  panel.innerHTML = html;
+
+  if(round.type==='build') setupDragDrop(sc);
+  if(round.type==='clean') setupCleanLines(sc);
+  if(round.type==='choose') setupChoose(sc);
+}
+
+/* ---------- BUILD ---------- */
+function buildChallengeHTML(sc){
+  return `
+    <div class="zone-label">Available Blocks (drag into the zone below — ignore distractors)</div>
+    <div class="pool" id="pool"></div>
+    <div class="zone-label">Your Prompt (drop here, in order)</div>
+    <div class="dropzone" id="dropzone"></div>
+  `;
+}
+
+function setupDragDrop(sc){
+  const pool = document.getElementById('pool');
+  const dz = document.getElementById('dropzone');
+  const allBlocks = shuffle(sc.correct.concat(sc.distract)).map((text,i)=>({id:'blk'+i, text, isCorrect: sc.correct.includes(text)}));
+  state._blocks = allBlocks;
+
+  allBlocks.forEach(b=>{
+    const chip = document.createElement('div');
+    chip.className='chip';
+    chip.draggable = true;
+    chip.textContent = b.text;
+    chip.dataset.id = b.id;
+    chip.addEventListener('dragstart', e=>{
+      chip.classList.add('dragging');
+      e.dataTransfer.setData('text/plain', b.id);
+    });
+    chip.addEventListener('dragend', ()=>chip.classList.remove('dragging'));
+    pool.appendChild(chip);
+  });
+
+  [pool,dz].forEach(zone=>{
+    zone.addEventListener('dragover', e=>{
+      e.preventDefault();
+      if(zone===dz) zone.classList.add('dragover');
+    });
+    zone.addEventListener('dragleave', ()=> zone.classList.remove('dragover'));
+    zone.addEventListener('drop', e=>{
+      e.preventDefault();
+      zone.classList.remove('dragover');
+      const id = e.dataTransfer.getData('text/plain');
+      const chip = document.querySelector(`[data-id="${id}"]`);
+      if(!chip) return;
+      zone.appendChild(chip);
+      state.moves++;
+      if(zone===dz){
+        chip.classList.add('in-zone');
+        if(!chip.querySelector('.rm')){
+          const rm = document.createElement('span');
+          rm.className='rm'; rm.textContent='✕';
+          rm.onclick=(ev)=>{ ev.stopPropagation(); pool.appendChild(chip); chip.classList.remove('in-zone'); const r=chip.querySelector('.rm'); if(r) r.remove(); state.moves++; syncDropOrder(); };
+          chip.appendChild(rm);
+        }
+        const block = allBlocks.find(bl=>bl.id===id);
+        if(block && !block.isCorrect){
+          state.wrongPlacements++;
+        }
+      } else {
+        chip.classList.remove('in-zone');
+        const r = chip.querySelector('.rm'); if(r) r.remove();
+      }
+      syncDropOrder();
+      updateScoreboard();
+    });
+  });
+}
+
+function syncDropOrder(){
+  const dz = document.getElementById('dropzone');
+  state.dropzoneOrder = Array.from(dz.children).map(c=>c.dataset.id);
+}
+
+/* ---------- CLEAN ---------- */
+function cleanChallengeHTML(sc){
+  return `
+    <div class="zone-label">Click each line to toggle Keep / Cut. Distill this bloated prompt down to what actually works.</div>
+    <div class="clean-list" id="clean-list"></div>
+  `;
+}
+function setupCleanLines(sc){
+  const list = document.getElementById('clean-list');
+  const lines = shuffle(sc.correct.map(t=>({text:t, keep:true})).concat(sc.distract.map(t=>({text:t, keep:false}))));
+  state._cleanLines = lines.map((l,i)=>({...l,id:'ln'+i}));
+  state.cleanState = {};
+  state._cleanLines.forEach(l=> state.cleanState[l.id] = null); // null=undecided
+
+  state._cleanLines.forEach(l=>{
+    const row = document.createElement('div');
+    row.className='clean-line';
+    row.dataset.id = l.id;
+    row.innerHTML = `<span class="tagbtn">MARK</span><span class="txt">${l.text}</span>`;
+    row.addEventListener('click', ()=>{
+      const cur = state.cleanState[l.id];
+      let next;
+      if(cur===null) next='keep';
+      else if(cur==='keep') next='cut';
+      else next=null;
+      state.cleanState[l.id]=next;
+      state.moves++;
+      row.classList.remove('keep','cut');
+      const tag = row.querySelector('.tagbtn');
+      if(next==='keep'){ row.classList.add('keep'); tag.textContent='KEEP'; }
+      else if(next==='cut'){ row.classList.add('cut'); tag.textContent='CUT'; }
+      else { tag.textContent='MARK'; }
+      updateScoreboard();
+    });
+    list.appendChild(row);
+  });
+}
+
+/* ---------- CHOOSE ---------- */
+function chooseChallengeHTML(sc){
+  return `<div class="choice-grid" id="choice-grid"></div>`;
+}
+function setupChoose(sc){
+  const grid = document.getElementById('choice-grid');
+  const options = shuffle([
+    {key:'weak', text:sc.weak},
+    {key:'optimized', text:sc.optimized},
+    {key:'over', text:sc.over}
+  ]);
+  state._choiceOptions = options;
+  const letters = ['A','B','C'];
+  options.forEach((opt,i)=>{
+    const card = document.createElement('div');
+    card.className='choice-card';
+    card.dataset.key = opt.key;
+    card.innerHTML = `<div class="lbl">OPTION ${letters[i]}</div><div class="body">${opt.text}</div>`;
+    card.addEventListener('click', ()=>{
+      if(state.answered) return;
+      document.querySelectorAll('.choice-card').forEach(c=>c.classList.remove('selected'));
+      card.classList.add('selected');
+      state.selectedChoice = opt.key;
+      state.moves++;
+      updateScoreboard();
+    });
+    grid.appendChild(card);
+  });
+}
+
+/* ============================= HINT ============================= */
+function useHint(){
+  state.hintsUsed++;
+  updateScoreboard();
+  const round = state.rounds[state.idx];
+  const sc = round.scenario;
+  if(round.type==='build'){
+    toast('Hint: this belongs → "'+sc.correct[0]+'"', 'good');
+  } else if(round.type==='clean'){
+    toast('Hint: cut this → "'+sc.distract[0]+'"', 'good');
+  } else {
+    toast('Hint: the optimized version balances role, task, context, format & constraints without contradictions.', 'good');
+  }
+}
+
+/* ============================= SUBMIT / SCORING ============================= */
+function clamp(v,min,max){ return Math.max(min,Math.min(max,v)); }
+
+function submitRound(){
+  if(state.answered) return;
+  const round = state.rounds[state.idx];
+  const sc = round.scenario;
+  const timeSec = stopTimer();
+  let result = {type:round.type, scenario:sc.title, accuracy:0, wrongPenalty:0, hintPenalty:0, timeBonus:0, optBonus:0, orderBonus:0, roundScore:0};
+
+  if(round.type==='build'){
+    const dropped = state.dropzoneOrder;
+    const correctInZone = dropped.filter(id=>{
+      const b = state._blocks.find(x=>x.id===id);
+      return b && b.isCorrect;
+    });
+    const wrongInZone = dropped.length - correctInZone.length;
+    const accuracy = sc.correct.length ? correctInZone.length / sc.correct.length : 0;
+    // order bonus: check relative order of correct items matches sc.correct order
+    const correctTextsInOrder = dropped.map(id=>state._blocks.find(x=>x.id===id)).filter(b=>b&&b.isCorrect).map(b=>b.text);
+    let orderMatches = 0;
+    for(let i=0;i<correctTextsInOrder.length;i++){
+      if(correctTextsInOrder[i]===sc.correct[i]) orderMatches++;
+    }
+    const orderBonus = sc.correct.length ? (orderMatches/sc.correct.length)*10 : 0;
+    const base = accuracy*70;
+    const timeBonus = clamp(10 - Math.floor(timeSec/8), 0, 10);
+    const movesPenalty = clamp((state.moves - sc.correct.length)*1, 0, 20);
+    const hintPenalty = state.hintsUsed*5;
+    const wrongPenalty = wrongInZone*4;
+    const optBonus = (wrongInZone===0 && state.hintsUsed===0) ? 10 : 0;
+    let total = base + orderBonus + timeBonus + optBonus - movesPenalty - hintPenalty - wrongPenalty;
+    total = clamp(total,0,100);
+    result = {...result, accuracy, wrongPenalty, hintPenalty, timeBonus, optBonus, orderBonus, roundScore: total};
+    showBuildFeedback(sc, accuracy, wrongInZone, total);
+  }
+  else if(round.type==='clean'){
+    const lines = state._cleanLines;
+    let correctDecisions = 0;
+    lines.forEach(l=>{
+      const decision = state.cleanState[l.id];
+      const wantKeep = l.keep;
+      if((decision==='keep' && wantKeep) || (decision==='cut' && !wantKeep)) correctDecisions++;
+    });
+    const accuracy = lines.length ? correctDecisions/lines.length : 0;
+    const wrongCount = lines.length - correctDecisions;
+    const base = accuracy*80;
+    const timeBonus = clamp(10 - Math.floor(timeSec/8), 0, 10);
+    const hintPenalty = state.hintsUsed*5;
+    const wrongPenalty = wrongCount*3;
+    const optBonus = (wrongCount===0 && state.hintsUsed===0) ? 10 : 0;
+    let total = base + timeBonus + optBonus - hintPenalty - wrongPenalty;
+    total = clamp(total,0,100);
+    result = {...result, accuracy, wrongPenalty, hintPenalty, timeBonus, optBonus, roundScore: total};
+    showCleanFeedback(sc, accuracy, wrongCount, total);
+  }
+  else { // choose
+    const chosen = state.selectedChoice;
+    const isCorrect = chosen === 'optimized';
+    const accuracy = isCorrect ? 1 : 0;
+    const timeBonus = clamp(10 - Math.floor(timeSec/6), 0, 10);
+    const hintPenalty = state.hintsUsed*5;
+    const optBonus = (isCorrect && state.hintsUsed===0) ? 15 : 0;
+    let total = (isCorrect?70:0) + timeBonus + optBonus - hintPenalty;
+    total = clamp(total,0,100);
+    result = {...result, accuracy, wrongPenalty: isCorrect?0:20, hintPenalty, timeBonus, optBonus, roundScore: total};
+    showChooseFeedback(sc, chosen, isCorrect, total);
+  }
+
+  state.answered = true;
+  state.results.push(result);
+  state.totalScore += result.roundScore;
+  updateScoreboard();
+
+  if(result.roundScore >= 80) toast('Excellent prompting! +'+Math.round(result.roundScore)+' pts', 'good');
+  else if(result.roundScore >= 50) toast('Decent attempt. +'+Math.round(result.roundScore)+' pts', '');
+  else toast('Rough round — check the feedback. +'+Math.round(result.roundScore)+' pts', 'bad');
+
+  const submitBtn = document.getElementById('submit-btn');
+  submitBtn.textContent = state.idx < state.rounds.length-1 ? 'Next Round →' : 'See Final Report →';
+  submitBtn.onclick = nextRound;
+}
+
+function nextRound(){
+  state.idx++;
+  if(state.idx >= state.rounds.length){
+    showReport();
+  } else {
+    renderRound();
+  }
+}
+
+/* ---------- feedback renderers ---------- */
+function showBuildFeedback(sc, accuracy, wrongInZone, total){
+  const box = document.getElementById('feedback-box');
+  box.classList.add('show');
+  box.innerHTML = `
+    <div><b>Round Score:</b> ${Math.round(total)}/100 &nbsp;|&nbsp; <b>Blocks matched:</b> ${Math.round(accuracy*100)}% &nbsp;|&nbsp; <b>Distractors placed:</b> ${wrongInZone}</div>
+    <span class="princ">💡 ${sc.principle}</span>
+    <div class="compare-cols">
+      <div class="c"><div class="h">Weak Prompt</div>${sc.weak}</div>
+      <div class="c"><div class="h">Optimized Prompt</div>${sc.optimized}</div>
+    </div>
+  `;
+}
+function showCleanFeedback(sc, accuracy, wrongCount, total){
+  const box = document.getElementById('feedback-box');
+  box.classList.add('show');
+  box.innerHTML = `
+    <div><b>Round Score:</b> ${Math.round(total)}/100 &nbsp;|&nbsp; <b>Correct decisions:</b> ${Math.round(accuracy*100)}% &nbsp;|&nbsp; <b>Mistakes:</b> ${wrongCount}</div>
+    <span class="princ">💡 ${sc.principle}</span>
+    <div class="compare-cols">
+      <div class="c"><div class="h">Weak AI Output</div>${sc.weakOutput}</div>
+      <div class="c"><div class="h">Optimized AI Output</div>${sc.optOutput}</div>
+    </div>
+  `;
+}
+function showChooseFeedback(sc, chosen, isCorrect, total){
+  document.querySelectorAll('.choice-card').forEach(c=>{
+    if(c.dataset.key==='optimized') c.classList.add('right');
+    else if(c.dataset.key===chosen && !isCorrect) c.classList.add('wrong');
+  });
+  const box = document.getElementById('feedback-box');
+  box.classList.add('show');
+  box.innerHTML = `
+    <div><b>Round Score:</b> ${Math.round(total)}/100 &nbsp;|&nbsp; <b>Result:</b> ${isCorrect ? 'Correct! ✅' : 'Not quite — the Optimized version was best.'}</div>
+    <span class="princ">💡 ${sc.principle}</span>
+  `;
+}
+
+/* ============================= REPORT ============================= */
+function showReport(){
+  document.getElementById('screen-game').classList.add('hidden');
+  document.getElementById('screen-report').classList.remove('hidden');
+
+  const results = state.results;
+  const maxTotal = results.length*100;
+  const pct = maxTotal ? (state.totalScore/maxTotal)*100 : 0;
+  const scoreOutOf1000 = Math.round((state.totalScore/maxTotal)*1000);
+
+  let rating, rank;
+  if(pct>=90){ rating='Prompt Virtuoso'; rank='🏆 Platinum Rank'; }
+  else if(pct>=75){ rating='Skilled Prompter'; rank='🥇 Gold Rank'; }
+  else if(pct>=60){ rating='Competent Prompter'; rank='🥈 Silver Rank'; }
+  else if(pct>=40){ rating='Developing Prompter'; rank='🥉 Bronze Rank'; }
+  else { rating='Novice Prompter'; rank='🔰 Starter Rank'; }
+
+  document.getElementById('report-score').textContent = scoreOutOf1000;
+  document.getElementById('report-rating').textContent = rating;
+  document.getElementById('report-rank').textContent = rank;
+
+  // Prompt DNA dimensions
+  const avg = key => results.length ? results.reduce((s,r)=>s+(r[key]||0),0)/results.length : 0;
+  const clarity = clamp(avg('accuracy')*100,0,100);
+  const precision = clamp(100 - avg('wrongPenalty')*4, 0, 100);
+  const structure = clamp((avg('orderBonus')/10)*100, 0, 100) || clarity*0.9;
+  const speed = clamp((avg('timeBonus')/10)*100, 0, 100);
+  const discipline = clamp(100 - avg('hintPenalty')*4, 0, 100);
+  const optimization = clamp((avg('optBonus')/15)*100, 0, 100);
+
+  const dna = [
+    {label:'Clarity', val:Math.round(clarity)},
+    {label:'Precision', val:Math.round(precision)},
+    {label:'Structure', val:Math.round(structure)},
+    {label:'Speed', val:Math.round(speed)},
+    {label:'Discipline', val:Math.round(discipline)},
+    {label:'Optimization', val:Math.round(optimization)}
+  ];
+  const dnaWrap = document.getElementById('dna-wrap');
+  dnaWrap.innerHTML = '';
+  dna.forEach(d=>{
+    const row = document.createElement('div');
+    row.className='dna-row';
+    row.innerHTML = `<div class="lab">${d.label}</div><div class="dna-track"><div class="dna-fill" style="width:0%"></div></div><div class="dna-val">${d.val}</div>`;
+    dnaWrap.appendChild(row);
+    setTimeout(()=>{ row.querySelector('.dna-fill').style.width = d.val+'%'; }, 100);
+  });
+
+  // metrics grid
+  const totalMoves = 0; // per-round moves aren't stored globally across rounds cumulatively for report except via results length
+  const metricsGrid = document.getElementById('metrics-grid');
+  const avgAccPct = Math.round(avg('accuracy')*100);
+  const totalHintPenalty = results.reduce((s,r)=>s+r.hintPenalty,0);
+  const totalOptBonus = results.reduce((s,r)=>s+r.optBonus,0);
+  const roundsPlayed = results.length;
+  metricsGrid.innerHTML = `
+    <div class="metric-card"><div class="lab">Rounds Played</div><div class="val">${roundsPlayed}</div></div>
+    <div class="metric-card"><div class="lab">Avg Accuracy</div><div class="val">${avgAccPct}%</div></div>
+    <div class="metric-card"><div class="lab">Hints Used</div><div class="val">${totalHintPenalty/5}</div></div>
+    <div class="metric-card"><div class="lab">Optimization Bonus</div><div class="val">+${Math.round(totalOptBonus)}</div></div>
+    <div class="metric-card"><div class="lab">Raw Score</div><div class="val">${Math.round(state.totalScore)}/${maxTotal}</div></div>
+  `;
+
+  // feedback
+  const weakest = dna.reduce((a,b)=> b.val < a.val ? b : a, dna[0]);
+  const strongest = dna.reduce((a,b)=> b.val > a.val ? b : a, dna[0]);
+  const feedbackEl = document.getElementById('feedback-final');
+  feedbackEl.innerHTML = `
+    Your strongest dimension is <b>${strongest.label}</b> (${strongest.val}/100) — your prompts consistently reflect this strength.
+    Your growth area is <b>${weakest.label}</b> (${weakest.val}/100). In data & research analysis prompting, this usually means
+    ${weakest.label==='Clarity' ? 'being more explicit about role, task and audience before adding detail.' :
+      weakest.label==='Precision' ? 'tightening constraints so the model can\'t wander into irrelevant or contradictory instructions.' :
+      weakest.label==='Structure' ? 'ordering your prompt logically: role → task → context → constraints → format.' :
+      weakest.label==='Speed' ? 'trusting your first well-reasoned instinct rather than over-deliberating.' :
+      weakest.label==='Discipline' ? 'relying less on hints and building pattern recognition for common prompt traps.' :
+      'avoiding both bloated over-engineering and under-specified vagueness — the sweet spot is a lean, complete prompt.'}
+  `;
+
+  const milestoneEl = document.getElementById('milestone');
+  milestoneEl.textContent = pct>=90
+    ? 'Next milestone: try Advanced difficulty to test multi-step analytical reasoning prompts.'
+    : pct>=60
+    ? `Next milestone: push your ${weakest.label} score above 80 to unlock a Gold-tier rating next run.`
+    : 'Next milestone: replay this set and focus on reading each "Desired Output" carefully before building your prompt.';
+
+  // final optimized prompt: pick the best-scoring round's optimized prompt
+  let bestIdx = 0, bestScore = -1;
+  results.forEach((r,i)=>{ if(r.roundScore>bestScore){ bestScore=r.roundScore; bestIdx=i; } });
+  const bestScenario = state.rounds[bestIdx].scenario;
+  document.getElementById('final-prompt').textContent = bestScenario.optimized;
+}
+</script>
+</body>
+</html>
