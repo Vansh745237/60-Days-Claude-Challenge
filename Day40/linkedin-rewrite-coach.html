@@ -1,0 +1,539 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Profile Desk — LinkedIn Rewrite Coach</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:opsz,wght@6..72,500;6..72,600;6..72,700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#15171c;
+  --panel:#1c1f26;
+  --panel-2:#242832;
+  --border:#333844;
+  --text:#eeece6;
+  --text-dim:#9a9fac;
+  --text-faint:#5c6170;
+  --brass:#c9a15a;
+  --brass-dim:#8a7040;
+  --red-pen:#c1523e;
+  --green:#6fa87e;
+  --font-display:'Newsreader',serif;
+  --font-body:'Inter',sans-serif;
+  --font-mono:'IBM Plex Mono',monospace;
+  --radius:12px;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:var(--bg);color:var(--text);font-family:var(--font-body);min-height:100vh;line-height:1.5;}
+@media(prefers-reduced-motion:reduce){*{animation-duration:.01ms !important;transition-duration:.01ms !important;}}
+:focus-visible{outline:2px solid var(--brass);outline-offset:2px;}
+.wrap{max-width:1200px;margin:0 auto;padding:36px 24px 90px;}
+
+/* HEADER */
+header{display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:34px;flex-wrap:wrap;gap:16px;border-bottom:1px solid var(--border);padding-bottom:24px;}
+.masthead-eyebrow{font-family:var(--font-mono);font-size:.68rem;letter-spacing:2px;text-transform:uppercase;color:var(--brass);margin-bottom:8px;}
+h1{font-family:var(--font-display);font-size:2.1rem;font-weight:600;letter-spacing:-.2px;}
+.tagline{font-family:var(--font-body);font-size:.92rem;color:var(--text-dim);margin-top:6px;max-width:480px;}
+.desk-stamp{font-family:var(--font-mono);font-size:.7rem;color:var(--text-faint);text-align:right;line-height:1.7;}
+
+/* LAYOUT */
+.layout{display:grid;grid-template-columns:400px 1fr;gap:26px;align-items:start;}
+@media(max-width:920px){.layout{grid-template-columns:1fr;}}
+
+/* FORM PANEL */
+.panel{background:var(--panel);border:1px solid var(--border);border-radius:var(--radius);padding:24px;}
+.panel + .panel{margin-top:20px;}
+.form-title{font-family:var(--font-mono);font-size:.68rem;text-transform:uppercase;letter-spacing:1.5px;color:var(--text-dim);margin-bottom:18px;display:flex;align-items:center;gap:8px;}
+.form-title::after{content:'';flex:1;height:1px;background:var(--border);}
+.field{margin-bottom:18px;}
+.field label{display:block;font-family:var(--font-mono);font-size:.72rem;color:var(--text-dim);margin-bottom:7px;letter-spacing:.3px;}
+.field .hint{font-size:.68rem;color:var(--text-faint);margin-top:5px;}
+input[type=text],textarea,select{
+  width:100%;background:var(--panel-2);border:1px solid var(--border);color:var(--text);
+  border-radius:8px;padding:11px 13px;font-family:var(--font-body);font-size:.88rem;transition:border-color .15s;
+}
+input[type=text]:focus,textarea:focus,select:focus{border-color:var(--brass);}
+textarea{resize:vertical;min-height:76px;}
+.field.invalid input,.field.invalid textarea{border-color:var(--red-pen);}
+.field-error{color:var(--red-pen);font-size:.7rem;margin-top:5px;display:none;font-family:var(--font-mono);}
+.field.invalid .field-error{display:block;}
+
+.chip-row{display:flex;flex-wrap:wrap;gap:8px;}
+.chip{background:var(--panel-2);border:1px solid var(--border);color:var(--text-dim);padding:7px 13px;border-radius:20px;font-family:var(--font-mono);font-size:.74rem;cursor:pointer;transition:.15s;}
+.chip.active{background:var(--brass);color:#191b20;border-color:var(--brass);font-weight:600;}
+
+.btn{font-family:var(--font-mono);font-size:.82rem;padding:13px 22px;border-radius:8px;border:1px solid var(--border);background:var(--panel-2);color:var(--text-dim);cursor:pointer;transition:all .16s ease;width:100%;display:flex;align-items:center;justify-content:center;gap:8px;}
+.btn:hover{color:var(--text);border-color:var(--brass);}
+.btn.primary{background:linear-gradient(135deg,var(--brass),var(--brass-dim));color:#191b20;border:none;font-weight:700;font-size:.86rem;padding:15px;}
+.btn.primary:hover{filter:brightness(1.08);}
+.btn.primary:disabled{opacity:.45;cursor:not-allowed;filter:none;}
+.btn.small{width:auto;padding:7px 13px;font-size:.72rem;}
+
+/* RIGHT: OUTPUT DESK */
+.output-empty{
+  background:var(--panel);border:1px dashed var(--border);border-radius:var(--radius);
+  padding:70px 30px;text-align:center;color:var(--text-faint);
+}
+.output-empty .oe-icon{font-size:2rem;margin-bottom:14px;opacity:.6;}
+.output-empty .oe-title{font-family:var(--font-display);font-size:1.2rem;color:var(--text-dim);margin-bottom:6px;}
+.output-empty .oe-sub{font-family:var(--font-mono);font-size:.76rem;}
+
+.loading-state{background:var(--panel);border:1px solid var(--border);border-radius:var(--radius);padding:60px 30px;text-align:center;display:none;}
+.loading-state.show{display:block;}
+.pen-scratch{width:52px;height:52px;margin:0 auto 18px;border:3px solid var(--border);border-top-color:var(--brass);border-radius:50%;animation:spin 0.9s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg);}}
+.loading-text{font-family:var(--font-mono);font-size:.8rem;color:var(--text-dim);}
+.loading-sub{font-family:var(--font-mono);font-size:.68rem;color:var(--text-faint);margin-top:6px;}
+
+.error-state{background:var(--panel);border:1px solid var(--red-pen);border-radius:var(--radius);padding:26px;display:none;}
+.error-state.show{display:block;animation:fadeIn .3s;}
+.error-state .et{font-family:var(--font-mono);color:var(--red-pen);font-size:.85rem;margin-bottom:6px;font-weight:600;}
+.error-state .es{font-family:var(--font-body);font-size:.85rem;color:var(--text-dim);}
+
+.result-wrap{display:none;}
+.result-wrap.show{display:block;animation:fadeIn .45s ease;}
+@keyframes fadeIn{from{opacity:0;transform:translateY(10px);}to{opacity:1;transform:translateY(0);}}
+
+/* Score strip */
+.score-strip{display:flex;gap:14px;margin-bottom:20px;flex-wrap:wrap;}
+.score-card{flex:1;min-width:140px;background:var(--panel);border:1px solid var(--border);border-radius:var(--radius);padding:18px;text-align:center;}
+.score-card .sv{font-family:var(--font-display);font-size:1.9rem;color:var(--brass);}
+.score-card .sl{font-family:var(--font-mono);font-size:.63rem;color:var(--text-faint);text-transform:uppercase;letter-spacing:1px;margin-top:4px;}
+
+/* mock LinkedIn card with red-pen coach marks */
+.profile-card{background:var(--panel);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;margin-bottom:20px;}
+.pc-banner{height:64px;background:linear-gradient(120deg,#2b2f3a,#1c1f26);}
+.pc-body{padding:0 24px 24px;position:relative;}
+.pc-avatar{width:76px;height:76px;border-radius:50%;background:var(--panel-2);border:4px solid var(--panel);margin-top:-38px;display:flex;align-items:center;justify-content:center;font-family:var(--font-display);font-size:1.6rem;color:var(--text-dim);}
+.pc-section{margin-top:18px;position:relative;}
+.pc-label{font-family:var(--font-mono);font-size:.65rem;text-transform:uppercase;letter-spacing:1.2px;color:var(--brass);margin-bottom:8px;display:flex;align-items:center;justify-content:space-between;}
+.pc-headline{font-family:var(--font-display);font-size:1.25rem;font-weight:600;line-height:1.35;}
+.pc-about{font-size:.9rem;color:var(--text-dim);white-space:pre-wrap;line-height:1.65;}
+.copy-btn{background:none;border:1px solid var(--border);color:var(--text-faint);font-family:var(--font-mono);font-size:.65rem;padding:4px 9px;border-radius:6px;cursor:pointer;}
+.copy-btn:hover{color:var(--brass);border-color:var(--brass);}
+.copy-btn.copied{color:var(--green);border-color:var(--green);}
+
+.headline-alts{display:flex;flex-direction:column;gap:8px;margin-top:8px;}
+.alt-item{background:var(--panel-2);border:1px solid var(--border);border-radius:8px;padding:11px 14px;display:flex;justify-content:space-between;align-items:center;gap:10px;font-size:.86rem;}
+.alt-item .at{flex:1;}
+
+.exp-block{margin-top:14px;padding-top:14px;border-top:1px solid var(--border);}
+.exp-title{font-family:var(--font-body);font-weight:600;font-size:.9rem;}
+.exp-meta{font-family:var(--font-mono);font-size:.68rem;color:var(--text-faint);margin:2px 0 8px;}
+.exp-bullets{list-style:none;display:flex;flex-direction:column;gap:6px;}
+.exp-bullets li{font-size:.86rem;color:var(--text-dim);padding-left:16px;position:relative;line-height:1.55;}
+.exp-bullets li::before{content:'▸';position:absolute;left:0;color:var(--brass);}
+
+/* coach notes */
+.coach-notes{background:var(--panel);border:1px solid var(--border);border-radius:var(--radius);padding:22px;margin-bottom:20px;}
+.coach-notes .cn-head{display:flex;align-items:center;gap:10px;margin-bottom:14px;}
+.cn-avatar{width:30px;height:30px;border-radius:50%;background:var(--red-pen);display:flex;align-items:center;justify-content:center;font-size:.85rem;flex-shrink:0;}
+.cn-name{font-family:var(--font-mono);font-size:.72rem;color:var(--text-dim);}
+.note-item{display:flex;gap:10px;margin-bottom:12px;font-size:.87rem;}
+.note-item:last-child{margin-bottom:0;}
+.note-tag{font-family:var(--font-mono);font-size:.62rem;padding:2px 8px;border-radius:10px;flex-shrink:0;height:fit-content;text-transform:uppercase;letter-spacing:.5px;margin-top:2px;}
+.note-tag.fix{background:rgba(193,82,62,.18);color:var(--red-pen);}
+.note-tag.strength{background:rgba(111,168,126,.18);color:var(--green);}
+.note-tag.tip{background:rgba(201,161,90,.18);color:var(--brass);}
+.note-text{color:var(--text-dim);line-height:1.55;}
+
+.checklist{display:flex;flex-direction:column;gap:9px;}
+.check-item{display:flex;gap:10px;align-items:flex-start;font-size:.87rem;color:var(--text-dim);}
+.check-item .cb{width:16px;height:16px;border:1.5px solid var(--brass);border-radius:4px;flex-shrink:0;margin-top:2px;}
+
+/* DOCS PANEL */
+.docs-toggle{
+  width:100%;text-align:left;background:var(--panel);border:1px solid var(--border);border-radius:var(--radius);
+  padding:16px 20px;color:var(--text-dim);font-family:var(--font-mono);font-size:.78rem;cursor:pointer;
+  display:flex;justify-content:space-between;align-items:center;margin-top:32px;
+}
+.docs-toggle:hover{border-color:var(--brass);color:var(--text);}
+.docs-chevron{transition:transform .2s ease;}
+.docs-toggle.open .docs-chevron{transform:rotate(180deg);}
+.docs-content{max-height:0;overflow:hidden;transition:max-height .35s ease;}
+.docs-content.open{max-height:3000px;}
+.docs-inner{background:var(--panel);border:1px solid var(--border);border-top:none;border-radius:0 0 var(--radius) var(--radius);padding:26px;margin-top:-1px;}
+.docs-inner h3{font-family:var(--font-display);font-size:1.05rem;margin:20px 0 8px;color:var(--text);}
+.docs-inner h3:first-child{margin-top:0;}
+.docs-inner p{font-size:.87rem;color:var(--text-dim);line-height:1.7;margin-bottom:8px;}
+.docs-inner code{font-family:var(--font-mono);background:var(--panel-2);padding:2px 6px;border-radius:4px;font-size:.82rem;color:var(--brass);}
+.docs-inner pre{background:var(--panel-2);border:1px solid var(--border);border-radius:8px;padding:16px;overflow-x:auto;font-family:var(--font-mono);font-size:.76rem;color:var(--text-dim);white-space:pre-wrap;margin:10px 0;line-height:1.6;}
+.docs-inner ul{margin:8px 0 8px 20px;font-size:.87rem;color:var(--text-dim);line-height:1.7;}
+
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--panel);border:1px solid var(--brass);color:var(--text);padding:10px 20px;border-radius:8px;font-family:var(--font-mono);font-size:.78rem;opacity:0;transition:all .25s ease;pointer-events:none;z-index:100;}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+
+footer{text-align:center;margin-top:50px;font-family:var(--font-mono);font-size:.68rem;color:var(--text-faint);}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <div>
+      <div class="masthead-eyebrow">Profile Desk — No. 01</div>
+      <h1>LinkedIn Rewrite Coach</h1>
+      <div class="tagline">Blunt, expert edits for students building their first strong profile. Fill the brief, get a rewritten headline, About section, and experience bullets — plus a coach's markup of what's weak.</div>
+    </div>
+    <div class="desk-stamp">Draft reviewed by<br>the Profile Desk editor<br>Session-based · nothing saved</div>
+  </header>
+
+  <div class="layout">
+    <!-- LEFT: FORM -->
+    <div>
+      <div class="panel">
+        <div class="form-title">The brief</div>
+
+        <div class="field" id="f-role">
+          <label for="targetRole">Target role or field you're aiming for</label>
+          <input type="text" id="targetRole" placeholder="e.g. Data Analyst, Product Design Intern, Backend Engineer">
+          <div class="field-error">Tell me what role you're aiming for — I can't write toward a blank target.</div>
+        </div>
+
+        <div class="field" id="f-background">
+          <label for="background">Your background (degree, year, major, relevant coursework)</label>
+          <textarea id="background" placeholder="e.g. 3rd-year B.Tech CSE student at XYZ University, focused on backend systems and databases"></textarea>
+          <div class="field-error">Give me at least a sentence of background to work with.</div>
+        </div>
+
+        <div class="field" id="f-achievements">
+          <label for="achievements">Key projects, internships, or achievements (one per line is fine)</label>
+          <textarea id="achievements" placeholder="e.g. Built a React Native app used by 200+ students; Runner-up at college hackathon; 3-month backend internship at a fintech startup" style="min-height:100px;"></textarea>
+          <div class="field-error">I need at least one concrete achievement — even a small one — to build real bullets, not filler.</div>
+        </div>
+
+        <div class="field">
+          <label for="skills">Top skills (comma-separated)</label>
+          <input type="text" id="skills" placeholder="e.g. Python, SQL, React, Figma">
+        </div>
+
+        <div class="field">
+          <label>Current headline (optional — paste what you have now)</label>
+          <input type="text" id="currentHeadline" placeholder="Leave blank if you don't have one yet">
+        </div>
+
+        <div class="field">
+          <label>Current About section (optional — paste what you have now)</label>
+          <textarea id="currentAbout" placeholder="Leave blank if you don't have one yet"></textarea>
+        </div>
+
+        <div class="field">
+          <label>Voice for the rewrite</label>
+          <div class="chip-row" id="voiceChips">
+            <button class="chip active" data-voice="confident">Confident & direct</button>
+            <button class="chip" data-voice="warm">Warm & approachable</button>
+            <button class="chip" data-voice="technical">Technical & precise</button>
+          </div>
+        </div>
+
+        <button class="btn primary" id="generateBtn">Review my profile →</button>
+      </div>
+    </div>
+
+    <!-- RIGHT: OUTPUT -->
+    <div>
+      <div class="output-empty" id="emptyState">
+        <div class="oe-icon">✎</div>
+        <div class="oe-title">Nothing on the desk yet</div>
+        <div class="oe-sub">Fill in the brief on the left and submit — your rewritten headline, About section, and experience bullets will land here.</div>
+      </div>
+
+      <div class="loading-state" id="loadingState">
+        <div class="pen-scratch"></div>
+        <div class="loading-text">Marking up your profile…</div>
+        <div class="loading-sub">Drafting headline options, tightening your About section, rewriting bullets</div>
+      </div>
+
+      <div class="error-state" id="errorState">
+        <div class="et">Couldn't finish the review</div>
+        <div class="es" id="errorMsg">Something went wrong on the API call. Check your connection and try again.</div>
+        <div style="margin-top:14px;"><button class="btn small" id="retryBtn">Try again</button></div>
+      </div>
+
+      <div class="result-wrap" id="resultWrap">
+
+        <div class="score-strip" id="scoreStrip"></div>
+
+        <div class="profile-card">
+          <div class="pc-banner"></div>
+          <div class="pc-body">
+            <div class="pc-avatar" id="pcAvatar">–</div>
+
+            <div class="pc-section">
+              <div class="pc-label"><span>Headline — recommended</span><button class="copy-btn" data-copy="headline">Copy</button></div>
+              <div class="pc-headline" id="pcHeadline"></div>
+              <div class="headline-alts" id="pcHeadlineAlts"></div>
+            </div>
+
+            <div class="pc-section">
+              <div class="pc-label"><span>About</span><button class="copy-btn" data-copy="about">Copy</button></div>
+              <div class="pc-about" id="pcAbout"></div>
+            </div>
+
+            <div class="pc-section" id="pcExperienceWrap"></div>
+          </div>
+        </div>
+
+        <div class="coach-notes">
+          <div class="cn-head">
+            <div class="cn-avatar">✎</div>
+            <div class="cn-name">Coach's markup</div>
+          </div>
+          <div id="coachNotesList"></div>
+        </div>
+
+        <div class="panel">
+          <div class="form-title">Do this next</div>
+          <div class="checklist" id="checklistItems"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <button class="docs-toggle" id="docsToggle">
+    <span>◇ How this was built</span>
+    <span class="docs-chevron">▾</span>
+  </button>
+  <div class="docs-content" id="docsContent">
+    <div class="docs-inner">
+      <h3>The system prompt</h3>
+      <p>The assistant runs on a single Claude call per submission, constrained to one job: turn a student's raw background into a rewritten LinkedIn headline, About section, and experience bullets, plus a short coach critique. The prompt fixes role, scope, tone, and a strict JSON output contract so the UI can render it into the mock profile card without any text-parsing guesswork.</p>
+      <pre id="systemPromptDisplay"></pre>
+
+      <h3>Why the UI looks like this</h3>
+      <p>A generic chat box would hide the actual deliverable behind scrollback. Students revising a profile need to <em>see</em> the rewrite sitting where it will actually live — so the output renders inside a mock LinkedIn card (banner, avatar circle, headline, About, experience) rather than as a chat bubble. The red-pen "coach's markup" panel mirrors how a mentor actually reviews a draft: strengths, fixes, and tips tagged and separated, in the blunt-coach voice the user asked for, not softened chatbot hedging.</p>
+      <p>The score strip (Headline strength, About clarity, Keyword alignment) gives an at-a-glance verdict before the person reads a single rewritten sentence — useful for early-career users who don't yet know what "good" looks like on LinkedIn.</p>
+
+      <h3>Extending this</h3>
+      <ul>
+        <li><strong>Add a job-description matcher:</strong> accept a pasted JD as a second input and have the model weight keyword alignment against that specific posting instead of the target role in general.</li>
+        <li><strong>Add memory:</strong> persist the last submission in <code>localStorage</code> so returning users see their previous draft and a diff against the new one — turns a one-shot tool into a revision tracker.</li>
+        <li><strong>Multi-step flow:</strong> split into two calls — first ask clarifying questions if the achievements are too thin (e.g. "What was the measurable outcome of the hackathon project?"), then generate the rewrite once the gaps are filled.</li>
+        <li><strong>Add tools:</strong> give Claude a web_search tool to pull current phrasing conventions for a specific industry (e.g. how PM postings phrase impact) before writing the headline, so the rewrite reflects live norms rather than only the model's training data.</li>
+        <li><strong>Section-by-section regeneration:</strong> let users click "regenerate" on just the headline or just one bullet, sending a smaller follow-up call with the rest of the profile as context instead of re-running the whole brief.</li>
+      </ul>
+
+      <h3>Edge cases the prompt handles</h3>
+      <ul>
+        <li>Missing or too-thin achievements → the model is instructed to ask for one concrete detail rather than inventing accomplishments.</li>
+        <li>Irrelevant or nonsense input → the model declines to fabricate a profile and returns a short redirect message in the same JSON contract.</li>
+        <li>Abusive or off-topic input → the model stays in scope, does not engage, and returns a neutral refusal note instead of a profile.</li>
+      </ul>
+    </div>
+  </div>
+
+  <footer>Profile Desk · client-side interface, calls the Claude API directly · no data stored server-side</footer>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+(function(){
+'use strict';
+
+const SYSTEM_PROMPT = `You are the Profile Desk editor: a blunt, expert LinkedIn coach who rewrites profile sections for early-career students and job seekers building their first strong LinkedIn presence.
+
+ROLE & SCOPE
+- Your only job is to take a user's target role, background, achievements, and skills, and produce a rewritten LinkedIn headline (with alternates), About section, and experience bullets, plus a short critique.
+- You write for recruiters skimming in 5-8 seconds: front-load the strongest, most specific detail. Prefer concrete nouns and numbers over adjectives like "passionate" or "hardworking."
+- Tone is blunt and expert, like a mentor marking up a draft — direct, specific, never mean, never generic praise. Never open with flattery. Never use hedging language like "you might consider."
+
+INPUT
+You will receive a JSON object with: targetRole, background, achievements, skills, currentHeadline (may be empty), currentAbout (may be empty), voice (one of "confident", "warm", "technical").
+
+OUTPUT FORMAT — respond with ONLY a single valid JSON object, no markdown fences, no prose outside the JSON, matching this exact shape:
+{
+  "scores": [{"label": string, "value": number 0-100, "note": string short}],
+  "headline": string (under 220 characters, the single strongest option),
+  "headlineAlternates": [string, string] (2 more distinct angles),
+  "about": string (120-220 words, first person, 3 short paragraphs separated by \\n\\n),
+  "experience": [{"title": string, "meta": string (company/context + dates if given, else omit dates), "bullets": [string, string, string]}],
+  "notes": [{"type": "fix"|"strength"|"tip", "text": string}] (4-6 items),
+  "checklist": [string] (3-5 concrete next actions, imperative voice)
+}
+
+RULES FOR THE REWRITE
+- Headline: role/positioning + 1-2 concrete skills or domains + what you're seeking or building. No emoji, no "|" spam, no buzzword strings.
+- About: paragraph 1 = who they are and what they're aiming for, grounded in one real detail from their background. Paragraph 2 = concrete proof (projects/internship/achievements) with specifics, not vague claims. Paragraph 3 = what they're looking for / call to action. Never invent metrics or achievements not implied by the input — if no numbers were given, describe scope and outcome in words instead of fabricating a percentage.
+- Experience bullets: action verb + what they did + concrete outcome or scope. Rewrite what the user gave you; do not invent new projects.
+- Notes: at least one "fix" (a real weakness in their current material or a common early-career mistake you're correcting), at least one "strength" (something specific, not generic), and at least one "tip" (something to do next).
+- Scores: 3 entries — "Headline strength", "About clarity", "Keyword alignment" — each 0-100, grounded in the actual input quality, not inflated.
+
+EDGE CASES
+- If achievements are missing or too thin to write a real bullet (e.g. just "good at teamwork"), do not invent specifics. Instead set "experience" to an empty array and add a "fix" note naming exactly what detail you need (e.g. "Tell me the outcome of that hackathon project — did it get used, judged, ranked?").
+- If targetRole or background is missing entirely, do not fabricate a profile. Return valid JSON where "headline" and "about" contain a short direct message explaining what's missing, "experience" is empty, "scores" are all 0, and "notes" has one "fix" item stating what's needed.
+- If input is nonsensical, off-topic, or unrelated to a LinkedIn profile (e.g. random text, a request to do something else entirely), do not attempt to build a profile from it. Return the same missing-info JSON shape with a "fix" note redirecting the user: "This doesn't look like profile material — give me your target role and real background and I'll rewrite it."
+- If input contains abusive, hateful, or harassing language, do not engage with or repeat it. Return the missing-info JSON shape with a neutral note: "Let's keep this focused on your profile — resubmit with your role and background."
+- Never claim credentials, employers, or outcomes the user did not state. Never output anything outside the single JSON object.`;
+
+document.getElementById('systemPromptDisplay').textContent = SYSTEM_PROMPT;
+
+const $ = id => document.getElementById(id);
+function toast(msg, isErr){
+  const t = $('toast');
+  t.textContent = msg;
+  t.style.borderColor = isErr ? '#c1523e' : '#c9a15a';
+  t.classList.add('show');
+  clearTimeout(toast._h);
+  toast._h = setTimeout(()=>t.classList.remove('show'), 2400);
+}
+
+/* voice chip select */
+document.querySelectorAll('#voiceChips .chip').forEach(chip=>{
+  chip.addEventListener('click', ()=>{
+    document.querySelectorAll('#voiceChips .chip').forEach(c=>c.classList.remove('active'));
+    chip.classList.add('active');
+  });
+});
+
+/* docs toggle */
+$('docsToggle').addEventListener('click', ()=>{
+  $('docsToggle').classList.toggle('open');
+  $('docsContent').classList.toggle('open');
+});
+
+function validate(){
+  let ok = true;
+  const role = $('targetRole').value.trim();
+  const background = $('background').value.trim();
+  const achievements = $('achievements').value.trim();
+
+  $('f-role').classList.toggle('invalid', role.length < 2);
+  $('f-background').classList.toggle('invalid', background.length < 8);
+  $('f-achievements').classList.toggle('invalid', achievements.length < 6);
+
+  if(role.length < 2) ok = false;
+  if(background.length < 8) ok = false;
+  if(achievements.length < 6) ok = false;
+  return ok;
+}
+
+['targetRole','background','achievements'].forEach(id=>{
+  $(id).addEventListener('input', ()=>{
+    const wrap = $(id).closest('.field');
+    if(wrap && wrap.classList.contains('invalid')) validate();
+  });
+});
+
+let lastPayload = null;
+
+$('generateBtn').addEventListener('click', runReview);
+$('retryBtn').addEventListener('click', runReview);
+
+async function runReview(){
+  if(!validate()){ toast('Fill in the highlighted fields first.', true); return; }
+
+  const voice = document.querySelector('#voiceChips .chip.active').dataset.voice;
+  const payload = {
+    targetRole: $('targetRole').value.trim(),
+    background: $('background').value.trim(),
+    achievements: $('achievements').value.trim(),
+    skills: $('skills').value.trim(),
+    currentHeadline: $('currentHeadline').value.trim(),
+    currentAbout: $('currentAbout').value.trim(),
+    voice
+  };
+  lastPayload = payload;
+
+  $('emptyState').style.display = 'none';
+  $('errorState').classList.remove('show');
+  $('resultWrap').classList.remove('show');
+  $('loadingState').classList.add('show');
+  $('generateBtn').disabled = true;
+
+  try{
+    const response = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-6',
+        max_tokens: 1000,
+        system: SYSTEM_PROMPT,
+        messages: [{ role: 'user', content: JSON.stringify(payload) }]
+      })
+    });
+    if(!response.ok) throw new Error('API request failed with status ' + response.status);
+    const data = await response.json();
+    const textBlock = (data.content || []).find(b => b.type === 'text');
+    if(!textBlock) throw new Error('No text content in response');
+    let clean = textBlock.text.trim().replace(/^```json/i,'').replace(/^```/,'').replace(/```$/,'').trim();
+    const parsed = JSON.parse(clean);
+    renderResult(parsed, payload);
+    toast('Review ready.');
+  }catch(err){
+    console.error(err);
+    $('errorMsg').textContent = 'Something went wrong reaching the Profile Desk (' + (err.message || 'unknown error') + '). Check your connection and try again.';
+    $('errorState').classList.add('show');
+  }finally{
+    $('loadingState').classList.remove('show');
+    $('generateBtn').disabled = false;
+  }
+}
+
+function esc(s){
+  const d = document.createElement('div');
+  d.textContent = s == null ? '' : String(s);
+  return d.innerHTML;
+}
+
+function renderResult(r, payload){
+  // scores
+  $('scoreStrip').innerHTML = (r.scores||[]).map(s=>
+    `<div class="score-card"><div class="sv">${esc(s.value)}</div><div class="sl">${esc(s.label)}</div></div>`
+  ).join('');
+
+  // avatar initials
+  const initials = (payload.targetRole||'?').trim().split(/\s+/).map(w=>w[0]).slice(0,2).join('').toUpperCase();
+  $('pcAvatar').textContent = initials || '?';
+
+  $('pcHeadline').textContent = r.headline || '—';
+  $('pcHeadlineAlts').innerHTML = (r.headlineAlternates||[]).map((h,i)=>
+    `<div class="alt-item"><span class="at">${esc(h)}</span><button class="copy-btn" data-copytext="${esc(h)}">Copy</button></div>`
+  ).join('');
+
+  $('pcAbout').textContent = r.about || '—';
+
+  const expWrap = $('pcExperienceWrap');
+  if(r.experience && r.experience.length){
+    expWrap.innerHTML = '<div class="pc-label"><span>Experience — rewritten</span></div>' + r.experience.map(e=>`
+      <div class="exp-block">
+        <div class="exp-title">${esc(e.title)}</div>
+        <div class="exp-meta">${esc(e.meta||'')}</div>
+        <ul class="exp-bullets">${(e.bullets||[]).map(b=>`<li>${esc(b)}</li>`).join('')}</ul>
+      </div>
+    `).join('');
+  } else {
+    expWrap.innerHTML = '';
+  }
+
+  const typeLabel = {fix:'Fix', strength:'Strength', tip:'Tip'};
+  $('coachNotesList').innerHTML = (r.notes||[]).map(n=>
+    `<div class="note-item"><span class="note-tag ${esc(n.type)}">${typeLabel[n.type]||n.type}</span><span class="note-text">${esc(n.text)}</span></div>`
+  ).join('') || '<div class="note-text">No notes returned.</div>';
+
+  $('checklistItems').innerHTML = (r.checklist||[]).map(c=>
+    `<div class="check-item"><span class="cb"></span><span>${esc(c)}</span></div>`
+  ).join('') || '<div class="note-text">No checklist returned.</div>';
+
+  // copy buttons
+  $('resultWrap').querySelectorAll('.copy-btn').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      let text = '';
+      if(btn.dataset.copy === 'headline') text = r.headline || '';
+      else if(btn.dataset.copy === 'about') text = r.about || '';
+      else if(btn.dataset.copytext) text = btn.dataset.copytext;
+      navigator.clipboard.writeText(text).then(()=>{
+        btn.textContent = 'Copied'; btn.classList.add('copied');
+        setTimeout(()=>{ btn.textContent = 'Copy'; btn.classList.remove('copied'); }, 1600);
+      }).catch(()=> toast('Could not copy — select and copy manually.', true));
+    });
+  });
+
+  $('resultWrap').classList.add('show');
+}
+
+})();
+</script>
+</body>
+</html>
