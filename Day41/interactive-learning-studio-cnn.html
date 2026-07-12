@@ -1,0 +1,1092 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Interactive Learning Studio — Convolutional Neural Networks</title>
+<style>
+:root{
+  --bg:#0a0e13;
+  --bg-alt:#0e141b;
+  --surface:#121a23;
+  --surface-2:#182330;
+  --border:#233040;
+  --text:#e7edf3;
+  --muted:#8fa1b3;
+  --dim:#5c6c7d;
+  --cyan:#4ce0d2;
+  --cyan-dim:#2a7a72;
+  --amber:#ffb454;
+  --coral:#ff7a6b;
+  --green:#7ee08a;
+  --mono: ui-monospace, "SF Mono", "Cascadia Code", Consolas, monospace;
+  --sans: -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --r: 10px;
+}
+*{box-sizing:border-box;}
+html{scroll-behavior:smooth;}
+body{
+  margin:0; background:var(--bg); color:var(--text); font-family:var(--sans);
+  line-height:1.6; -webkit-font-smoothing:antialiased;
+  background-image:
+    linear-gradient(var(--border) 1px, transparent 1px),
+    linear-gradient(90deg, var(--border) 1px, transparent 1px);
+  background-size:48px 48px;
+  background-attachment:fixed;
+  background-position:-1px -1px;
+}
+body::before{
+  content:""; position:fixed; inset:0; pointer-events:none; z-index:0;
+  background:radial-gradient(circle at 20% 0%, rgba(76,224,210,0.06), transparent 45%),
+             radial-gradient(circle at 90% 30%, rgba(255,122,107,0.05), transparent 40%);
+}
+.wrap{max-width:960px; margin:0 auto; padding:0 24px; position:relative; z-index:1;}
+h1,h2,h3,h4{font-family:var(--sans); font-weight:800; letter-spacing:-0.02em; margin:0;}
+code, .mono{font-family:var(--mono);}
+a{color:var(--cyan);}
+::selection{background:var(--cyan); color:#041412;}
+
+/* ---------- Progress bar ---------- */
+#progressbar{position:fixed; top:0; left:0; height:3px; background:linear-gradient(90deg,var(--cyan),var(--amber)); width:0%; z-index:200; transition:width .3s;}
+
+/* ---------- Nav ---------- */
+nav{position:sticky; top:0; z-index:100; backdrop-filter:blur(10px); background:rgba(10,14,19,0.85); border-bottom:1px solid var(--border);}
+.navrow{display:flex; align-items:center; justify-content:space-between; padding:14px 24px; max-width:960px; margin:0 auto;}
+.brand{display:flex; align-items:center; gap:10px; font-weight:800; font-size:15px;}
+.brand .dot{width:10px;height:10px;background:var(--cyan);border-radius:2px; box-shadow:0 0 12px var(--cyan);}
+.navsteps{display:flex; gap:6px; flex-wrap:wrap;}
+.navstep{width:28px; height:28px; border-radius:6px; border:1px solid var(--border); display:flex; align-items:center; justify-content:center; font-family:var(--mono); font-size:11px; color:var(--dim); cursor:pointer; transition:.2s; background:var(--surface);}
+.navstep.done{background:var(--cyan-dim); color:#eafffb; border-color:var(--cyan);}
+.navstep.active{border-color:var(--amber); color:var(--amber); box-shadow:0 0 0 2px rgba(255,180,84,0.2);}
+.navstep.locked{opacity:.35; cursor:not-allowed;}
+
+/* ---------- Hero ---------- */
+header.hero{padding:64px 0 40px; position:relative;}
+.eyebrow{font-family:var(--mono); color:var(--cyan); font-size:12px; letter-spacing:.15em; text-transform:uppercase; margin-bottom:14px; display:flex; align-items:center; gap:10px;}
+.eyebrow::before{content:""; width:24px; height:1px; background:var(--cyan);}
+h1.title{font-size:clamp(32px,5vw,52px); line-height:1.05; margin-bottom:16px;}
+h1.title .accent{color:var(--cyan);}
+.subtitle{color:var(--muted); font-size:17px; max-width:640px; margin-bottom:32px;}
+
+.kernel-hero{display:flex; gap:36px; align-items:center; flex-wrap:wrap; margin:20px 0 40px;}
+#kernelCanvas{border:1px solid var(--border); border-radius:var(--r); background:var(--surface);}
+.kernel-readout{font-family:var(--mono); font-size:13px; color:var(--muted); min-width:220px;}
+.kernel-readout .val{color:var(--cyan); font-weight:700; font-size:22px;}
+.kernel-readout div{margin-bottom:6px;}
+
+.meta-grid{display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:14px; margin:32px 0;}
+.meta-card{background:var(--surface); border:1px solid var(--border); border-radius:var(--r); padding:16px;}
+.meta-card .label{font-family:var(--mono); font-size:11px; color:var(--dim); text-transform:uppercase; letter-spacing:.08em; margin-bottom:6px;}
+.meta-card .value{font-size:15px; font-weight:700;}
+
+.reward-strip{display:flex; align-items:center; gap:14px; background:linear-gradient(90deg, rgba(76,224,210,0.08), rgba(255,180,84,0.05)); border:1px solid var(--cyan-dim); border-radius:var(--r); padding:16px 18px; margin-bottom:20px;}
+.reward-strip .icon{font-size:26px;}
+.reward-strip .txt{font-size:14px; color:var(--muted);}
+.reward-strip .txt b{color:var(--text);}
+
+.btn{font-family:var(--sans); font-weight:700; font-size:14px; padding:13px 24px; border-radius:8px; border:none; cursor:pointer; transition:.2s; display:inline-flex; align-items:center; gap:8px;}
+.btn-primary{background:var(--cyan); color:#04141c;}
+.btn-primary:hover{background:#68e9dc; transform:translateY(-1px);}
+.btn-ghost{background:transparent; color:var(--text); border:1px solid var(--border);}
+.btn-ghost:hover{border-color:var(--cyan);}
+.btn:disabled{opacity:.4; cursor:not-allowed; transform:none;}
+
+/* ---------- Module ---------- */
+.module{padding:64px 0; border-top:1px solid var(--border); display:none;}
+.module.active{display:block;}
+.module-head{display:flex; align-items:baseline; gap:14px; margin-bottom:6px;}
+.module-num{font-family:var(--mono); color:var(--amber); font-size:14px;}
+.module-diff{font-family:var(--mono); font-size:11px; padding:3px 8px; border-radius:20px; border:1px solid var(--border); color:var(--muted); margin-left:auto;}
+.module h2{font-size:28px; margin-bottom:6px;}
+.module-desc{color:var(--muted); margin-bottom:36px; max-width:680px;}
+
+.section-label{font-family:var(--mono); font-size:12px; color:var(--cyan); text-transform:uppercase; letter-spacing:.1em; margin:38px 0 14px; display:flex; align-items:center; gap:10px;}
+.section-label::after{content:""; flex:1; height:1px; background:var(--border);}
+
+.card{background:var(--surface); border:1px solid var(--border); border-radius:var(--r); padding:22px; margin-bottom:16px;}
+.card h4{font-size:16px; margin-bottom:10px; color:var(--text);}
+.card p{color:var(--muted); font-size:14.5px; margin:0 0 10px;}
+.card p:last-child{margin-bottom:0;}
+
+.analogy{border-left:3px solid var(--amber); background:rgba(255,180,84,0.06);}
+.analogy .tag{font-family:var(--mono); font-size:11px; color:var(--amber); text-transform:uppercase; margin-bottom:8px; letter-spacing:.08em;}
+
+.misconception{border-left:3px solid var(--coral); background:rgba(255,122,107,0.06);}
+.misconception .tag{font-family:var(--mono); font-size:11px; color:var(--coral); text-transform:uppercase; margin-bottom:8px;}
+
+.grid2{display:grid; grid-template-columns:1fr 1fr; gap:16px;}
+@media(max-width:720px){.grid2{grid-template-columns:1fr;} .kernel-hero{flex-direction:column; align-items:flex-start;}}
+
+table.cmp{width:100%; border-collapse:collapse; font-size:13.5px;}
+table.cmp th, table.cmp td{padding:10px 12px; border:1px solid var(--border); text-align:left;}
+table.cmp th{background:var(--surface-2); font-family:var(--mono); font-size:12px; color:var(--cyan);}
+table.cmp td{color:var(--muted);}
+
+.takeaways{list-style:none; padding:0; margin:0;}
+.takeaways li{padding:10px 0 10px 28px; border-bottom:1px solid var(--border); position:relative; font-size:14.5px; color:var(--muted);}
+.takeaways li:last-child{border-bottom:none;}
+.takeaways li::before{content:"✓"; position:absolute; left:0; color:var(--cyan); font-weight:700;}
+
+/* SVG diagram boxes */
+.diagram-box{background:var(--surface); border:1px solid var(--border); border-radius:var(--r); padding:20px; margin-bottom:16px; overflow-x:auto;}
+.diagram-cap{font-family:var(--mono); font-size:11.5px; color:var(--dim); text-align:center; margin-top:10px;}
+
+/* Interactive convolution playground */
+.conv-lab{display:flex; gap:24px; flex-wrap:wrap; align-items:flex-start;}
+.grid5{display:grid; grid-template-columns:repeat(6,32px); gap:2px;}
+.cell{width:32px; height:32px; background:var(--bg-alt); border:1px solid var(--border); display:flex; align-items:center; justify-content:center; font-family:var(--mono); font-size:11px; color:var(--muted); border-radius:3px;}
+.cell.hl{background:rgba(76,224,210,0.25); border-color:var(--cyan);}
+.cell.out{background:rgba(255,180,84,0.2); border-color:var(--amber); color:var(--amber); font-weight:700;}
+
+/* Exercise blocks */
+.exercise{border:1px dashed var(--cyan-dim); border-radius:var(--r); padding:20px; margin-bottom:16px; background:rgba(76,224,210,0.03);}
+.exercise .tag{font-family:var(--mono); font-size:11px; color:var(--cyan); text-transform:uppercase; margin-bottom:10px; letter-spacing:.08em;}
+.exercise input[type=number], .exercise input[type=text]{background:var(--bg-alt); border:1px solid var(--border); color:var(--text); padding:8px 10px; border-radius:6px; font-family:var(--mono); width:80px;}
+.exercise .feedback{margin-top:10px; font-size:13.5px; font-family:var(--mono); display:none;}
+.exercise .feedback.show{display:block;}
+.exercise .feedback.ok{color:var(--green);}
+.exercise .feedback.bad{color:var(--coral);}
+
+/* Quiz */
+.quiz{background:var(--surface); border:1px solid var(--border); border-radius:var(--r); padding:26px; margin-top:40px;}
+.quiz-head{display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;}
+.quiz-head h3{font-size:19px;}
+.qcount{font-family:var(--mono); font-size:12px; color:var(--dim);}
+.qblock{margin-bottom:26px; padding-bottom:22px; border-bottom:1px solid var(--border);}
+.qblock:last-of-type{border-bottom:none;}
+.qtext{font-weight:700; margin-bottom:12px; font-size:15px;}
+.opt{display:block; width:100%; text-align:left; background:var(--bg-alt); border:1px solid var(--border); color:var(--text); padding:12px 14px; border-radius:8px; margin-bottom:8px; cursor:pointer; font-size:14px; transition:.15s;}
+.opt:hover{border-color:var(--cyan);}
+.opt.correct{border-color:var(--green); background:rgba(126,224,138,0.1);}
+.opt.wrong{border-color:var(--coral); background:rgba(255,122,107,0.1);}
+.opt:disabled{cursor:default;}
+.explain{font-size:13px; color:var(--muted); margin-top:8px; padding:10px 12px; background:var(--bg-alt); border-radius:6px; display:none; border-left:3px solid var(--cyan);}
+.explain.show{display:block;}
+.quiz-result{text-align:center; padding:20px; display:none;}
+.quiz-result.show{display:block;}
+.score-num{font-size:44px; font-weight:800; font-family:var(--mono); color:var(--cyan);}
+.score-msg{color:var(--muted); margin:8px 0 18px;}
+
+/* Final / resources */
+.finale{padding:64px 0; border-top:1px solid var(--border); display:none;}
+.finale.active{display:block;}
+.cheat-grid{display:grid; grid-template-columns:repeat(auto-fit,minmax(260px,1fr)); gap:14px;}
+.res-grid{display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:14px; margin-bottom:10px;}
+.res-card a{text-decoration:none; color:var(--text); font-weight:700; font-size:14px;}
+.kw{display:inline-block; font-family:var(--mono); font-size:12px; background:var(--bg-alt); border:1px solid var(--border); color:var(--amber); padding:5px 10px; border-radius:20px; margin:4px 6px 0 0;}
+.print-btn{position:fixed; bottom:24px; right:24px; z-index:150;}
+footer{text-align:center; padding:40px 0 60px; color:var(--dim); font-family:var(--mono); font-size:12px;}
+
+@media print{
+  nav, #progressbar, .print-btn, .btn, .conv-lab canvas, #kernelCanvas{display:none !important;}
+  .module, .finale{display:block !important;}
+  body{background:#fff; color:#000;}
+}
+</style>
+</head>
+<body>
+
+<div id="progressbar"></div>
+
+<nav>
+  <div class="navrow">
+    <div class="brand"><span class="dot"></span> Interactive Learning Studio</div>
+    <div class="navsteps" id="navsteps"></div>
+  </div>
+</nav>
+
+<div class="wrap">
+
+<!-- ============ HERO / INTRO ============ -->
+<header class="hero">
+  <div class="eyebrow">Deep Learning · Computer Vision</div>
+  <h1 class="title">Convolutional Neural <span class="accent">Networks</span></h1>
+  <p class="subtitle">A complete, hands-on tutorial on how machines learn to see — from the sliding kernel that detects an edge to the deep stacks that recognize a face. Slide the kernel below to feel how convolution actually works before we dive in.</p>
+
+  <div class="kernel-hero">
+    <canvas id="kernelCanvas" width="220" height="220"></canvas>
+    <div class="kernel-readout">
+      <div>Kernel position: <span class="val" id="kx">2,2</span></div>
+      <div>This 3×3 kernel is an <b>edge detector</b>. As it slides across the image, each stop computes one dot-product — one pixel of a brand-new "feature map."</div>
+      <div style="margin-top:10px;">Output feature map value here: <span class="val" id="kout">—</span></div>
+    </div>
+  </div>
+
+  <div class="reward-strip">
+    <div class="icon">🏆</div>
+    <div class="txt">Earn a <b>badge per module</b> (4 total) plus a <b>Mastery Certificate</b> after the final challenge. Score 75%+ on each quiz to unlock the next module. Your progress is tracked live in the bar above.</div>
+  </div>
+
+  <div class="meta-grid">
+    <div class="meta-card"><div class="label">Estimated time</div><div class="value">≈ 2.5 – 3 hours</div></div>
+    <div class="meta-card"><div class="label">Prerequisites</div><div class="value">Basic neural nets, Python</div></div>
+    <div class="meta-card"><div class="label">Modules</div><div class="value">4, progressive</div></div>
+    <div class="meta-card"><div class="label">Format</div><div class="value">Theory + interactive labs</div></div>
+  </div>
+
+  <div class="card">
+    <h4>Learning objectives</h4>
+    <ul class="takeaways">
+      <li>Explain why convolution beats fully-connected layers for images</li>
+      <li>Manually compute convolution, stride, padding, and output dimensions</li>
+      <li>Describe the role of filters, feature maps, pooling, and activation in a CNN</li>
+      <li>Read and reason about real CNN architectures (LeNet → ResNet lineage)</li>
+      <li>Diagnose overfitting/underfitting and apply regularization to a CNN</li>
+      <li>Design a CNN architecture for a new image classification problem</li>
+    </ul>
+  </div>
+  <div class="card">
+    <h4>Expected outcome</h4>
+    <p>By the end, you'll be able to look at any CNN architecture diagram and know exactly what each layer is doing and why it's there — and you'll be able to sketch your own architecture for a given image task, justifying every design choice.</p>
+  </div>
+
+  <button class="btn btn-primary" onclick="goToModule(1)">Start Module 1 →</button>
+</header>
+
+<!-- ============ MODULE 1 ============ -->
+<section class="module" id="module-1" data-mod="1">
+  <div class="module-head"><span class="module-num">MODULE 01</span><span class="module-diff">Foundational</span></div>
+  <h2>Why Convolution? Seeing Like a Machine</h2>
+  <p class="module-desc">Before the mechanics, understand the problem CNNs were invented to solve: why treating an image as a flat list of numbers breaks down, and what "convolution" borrows from image processing to fix it.</p>
+
+  <div class="section-label">Core Explanation</div>
+  <div class="card">
+    <h4>The problem with fully-connected layers on images</h4>
+    <p>A 224×224 RGB image has 224×224×3 = 150,528 values. Feed that into a plain dense layer with just 1,000 neurons and you already have ~150 million weights in one layer — before the network has learned anything. Worse: a dense layer treats pixel (0,0) and pixel (223,223) as completely unrelated inputs, throwing away the fact that <i>nearby pixels are related</i> and that a cat's ear looks like a cat's ear whether it's in the top-left or bottom-right of the photo.</p>
+    <p>Convolution fixes both problems with two ideas: <b>local connectivity</b> (each neuron only looks at a small patch of the image, not the whole thing) and <b>parameter sharing</b> (the same small filter slides across the entire image, so a "vertical edge detector" learned in one corner works everywhere else too).</p>
+  </div>
+
+  <div class="card analogy">
+    <div class="tag">Analogy</div>
+    <p>Think of a convolutional filter like a <b>stencil</b> you slide across a wall to spray-paint the same small pattern everywhere. You don't need a different stencil for every square inch of the wall — one stencil, moved around, reproduces the pattern wherever it fits. A CNN filter is that stencil, except instead of spraying paint it's asking "how much does this patch of the image look like the pattern I'm trained to detect?"</p>
+  </div>
+
+  <div class="section-label">How Convolution Works — Diagram</div>
+  <div class="diagram-box">
+    <svg viewBox="0 0 640 220" width="100%" height="220" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <marker id="arrow1" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 Z" fill="#4ce0d2"/></marker>
+      </defs>
+      <text x="40" y="24" fill="#8fa1b3" font-family="ui-monospace,monospace" font-size="12">INPUT IMAGE (6×6)</text>
+      <g font-family="ui-monospace,monospace" font-size="11">
+        <!-- input grid -->
+        <g id="inputgrid"></g>
+      </g>
+      <text x="270" y="24" fill="#8fa1b3" font-family="ui-monospace,monospace" font-size="12">KERNEL (3×3)</text>
+      <rect x="270" y="40" width="72" height="72" fill="none" stroke="#ffb454" stroke-width="2" rx="4"/>
+      <text x="306" y="82" fill="#ffb454" font-family="ui-monospace,monospace" font-size="26" text-anchor="middle">*</text>
+      <line x1="220" y1="76" x2="266" y2="76" stroke="#4ce0d2" stroke-width="2" marker-end="url(#arrow1)"/>
+      <line x1="360" y1="76" x2="410" y2="76" stroke="#4ce0d2" stroke-width="2" marker-end="url(#arrow1)"/>
+      <text x="450" y="24" fill="#8fa1b3" font-family="ui-monospace,monospace" font-size="12">FEATURE MAP (4×4)</text>
+      <g id="outputgrid"></g>
+    </svg>
+    <div class="diagram-cap">The 3×3 kernel slides across every valid position of the 6×6 input, producing a 4×4 output — one number per stop.</div>
+  </div>
+
+  <div class="section-label">Interactive Lab — Slide the Kernel Yourself</div>
+  <div class="card">
+    <p>Click any highlighted position on the input grid below to move the 3×3 kernel and watch the corresponding output cell light up. This is exactly what "convolving" means: multiply, sum, move, repeat.</p>
+    <div class="conv-lab">
+      <div>
+        <div style="font-family:var(--mono);font-size:11px;color:var(--dim);margin-bottom:6px;">INPUT (click a cell)</div>
+        <div class="grid5" id="labInput"></div>
+      </div>
+      <div>
+        <div style="font-family:var(--mono);font-size:11px;color:var(--dim);margin-bottom:6px;">OUTPUT MAP</div>
+        <div class="grid5" id="labOutput" style="grid-template-columns:repeat(4,32px);"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="section-label">Comparison</div>
+  <div class="card">
+    <table class="cmp">
+      <tr><th>Property</th><th>Fully-Connected Layer</th><th>Convolutional Layer</th></tr>
+      <tr><td>Connectivity</td><td>Every input to every neuron</td><td>Local receptive field only</td></tr>
+      <tr><td>Parameters (example)</td><td>~150M for one 1000-unit layer</td><td>A few hundred per filter</td></tr>
+      <tr><td>Spatial awareness</td><td>None — order doesn't matter</td><td>Preserves 2D structure</td></tr>
+      <tr><td>Translation invariance</td><td>Must relearn pattern per location</td><td>Same filter detects pattern anywhere</td></tr>
+    </table>
+  </div>
+
+  <div class="section-label">Practical Exercise</div>
+  <div class="exercise">
+    <div class="tag">Try it</div>
+    <p>A single 3×3 filter with 1 input channel has how many learnable weights (ignore bias)?</p>
+    <input type="number" id="ex1a">
+    <button class="btn btn-ghost" onclick="checkEx('ex1a', 9, 'ex1a-fb')">Check</button>
+    <div class="feedback" id="ex1a-fb"></div>
+  </div>
+  <div class="exercise">
+    <div class="tag">Try it</div>
+    <p>Now add a bias term and 3 input channels (like RGB) — how many total learnable parameters for that one filter?</p>
+    <input type="number" id="ex1b">
+    <button class="btn btn-ghost" onclick="checkEx('ex1b', 28, 'ex1b-fb', '3×3×3 = 27 weights + 1 bias = 28')">Check</button>
+    <div class="feedback" id="ex1b-fb"></div>
+  </div>
+
+  <div class="section-label">Common Misconceptions</div>
+  <div class="card misconception">
+    <div class="tag">Misconception</div>
+    <p><b>"CNNs literally do mathematical convolution (with kernel flipping) like in signal processing."</b> In practice, deep learning frameworks implement <i>cross-correlation</i> (no flipping) and just call it "convolution." Since the filter weights are learned anyway, the flip makes no practical difference — but it's worth knowing the terminology is loose.</p>
+  </div>
+  <div class="card misconception">
+    <div class="tag">Misconception</div>
+    <p><b>"A bigger filter always sees more context, so bigger is better."</b> Larger filters cost more parameters and compute. Modern architectures usually prefer stacking multiple small 3×3 filters, which achieve a larger effective receptive field with fewer parameters and more non-linearity in between.</p>
+  </div>
+
+  <div class="section-label">Key Takeaways</div>
+  <div class="card">
+    <ul class="takeaways">
+      <li>Convolution uses local connectivity + weight sharing to slash parameters vs. dense layers</li>
+      <li>A filter is a small learnable pattern-matcher that slides across the whole image</li>
+      <li>The output of a convolution is called a feature map</li>
+      <li>Frameworks implement cross-correlation but call it convolution</li>
+    </ul>
+  </div>
+
+  <!-- QUIZ 1 -->
+  <div class="quiz" id="quiz-1" data-total="4">
+    <div class="quiz-head"><h3>Module 1 Quiz</h3><span class="qcount">4 questions</span></div>
+    <div id="quiz1-body"></div>
+    <button class="btn btn-primary" id="quiz1-submit" onclick="submitQuiz(1)">Submit Answers</button>
+    <div class="quiz-result" id="quiz1-result">
+      <div class="score-num" id="quiz1-score">0/4</div>
+      <div class="score-msg" id="quiz1-msg"></div>
+      <button class="btn btn-primary" onclick="unlockNext(1)">Unlock Module 2 →</button>
+      <button class="btn btn-ghost" onclick="retryQuiz(1)">Retry Quiz</button>
+    </div>
+  </div>
+</section>
+
+<!-- ============ MODULE 2 ============ -->
+<section class="module" id="module-2" data-mod="2">
+  <div class="module-head"><span class="module-num">MODULE 02</span><span class="module-diff">Building blocks</span></div>
+  <h2>Stride, Padding, Pooling & Activation</h2>
+  <p class="module-desc">Now that you can compute one convolution, learn the knobs that control output size, the pooling operation that shrinks feature maps, and the non-linearity that makes the whole stack meaningful.</p>
+
+  <div class="section-label">Core Explanation</div>
+  <div class="card">
+    <h4>Stride and padding control output size</h4>
+    <p><b>Stride</b> is how many pixels the kernel jumps each step. Stride 1 moves one pixel at a time (dense sampling, big output); stride 2 skips every other position (output roughly halves).</p>
+    <p><b>Padding</b> adds a border of zeros around the input so the kernel can be centered on edge pixels too, and so the output doesn't shrink every layer. "Valid" padding = no padding (output shrinks); "same" padding = pad exactly enough to keep output size equal to input size (with stride 1).</p>
+    <p>The general formula for output size along one dimension:</p>
+    <p class="mono" style="color:var(--cyan);">output = floor((input − kernel + 2×padding) / stride) + 1</p>
+  </div>
+
+  <div class="card analogy">
+    <div class="tag">Analogy</div>
+    <p>Padding is like adding a picture frame's mat border before you start stamping a design near the edges — without it, the stamp would fall off the paper before reaching the corners. Stride is like choosing to take a step versus a stride-and-a-half when mowing a lawn: bigger strides cover the lawn faster but leave bigger gaps of "unexamined" grass in each single pass.</p>
+  </div>
+
+  <div class="section-label">Practical Exercise — Compute Output Size</div>
+  <div class="exercise">
+    <div class="tag">Try it</div>
+    <p>Input is 32×32, kernel is 5×5, padding = 2, stride = 1. What is the output height/width?</p>
+    <input type="number" id="ex2a">
+    <button class="btn btn-ghost" onclick="checkEx('ex2a', 32, 'ex2a-fb', '(32-5+2*2)/1+1 = 32')">Check</button>
+    <div class="feedback" id="ex2a-fb"></div>
+  </div>
+  <div class="exercise">
+    <div class="tag">Try it</div>
+    <p>Input is 28×28, kernel 3×3, padding = 0, stride = 2. Output size?</p>
+    <input type="number" id="ex2b">
+    <button class="btn btn-ghost" onclick="checkEx('ex2b', 13, 'ex2b-fb', 'floor((28-3+0)/2)+1 = floor(12.5)+1 = 13')">Check</button>
+    <div class="feedback" id="ex2b-fb"></div>
+  </div>
+
+  <div class="section-label">Pooling — Downsampling With a Purpose</div>
+  <div class="card">
+    <h4>Max pooling vs. average pooling</h4>
+    <p>Pooling shrinks each feature map by summarizing small regions (typically 2×2) into a single value, cutting computation and adding a small amount of translation robustness. <b>Max pooling</b> keeps the strongest activation in each region (good for detecting "is this feature present anywhere here"); <b>average pooling</b> smooths the region out (useful late in the network, e.g. global average pooling before classification).</p>
+  </div>
+  <div class="diagram-box">
+    <svg viewBox="0 0 520 160" width="100%" height="160" xmlns="http://www.w3.org/2000/svg">
+      <text x="10" y="18" fill="#8fa1b3" font-family="ui-monospace,monospace" font-size="12">4×4 FEATURE MAP</text>
+      <g id="poolInput" font-family="ui-monospace,monospace" font-size="12"></g>
+      <text x="330" y="18" fill="#8fa1b3" font-family="ui-monospace,monospace" font-size="12">2×2 MAX-POOL, STRIDE 2</text>
+      <g id="poolOutput" font-family="ui-monospace,monospace" font-size="13"></g>
+    </svg>
+    <div class="diagram-cap">Each 2×2 colored block collapses to its maximum value — a 4×4 map becomes a 2×2 map.</div>
+  </div>
+
+  <div class="section-label">Activation Functions</div>
+  <div class="grid2">
+    <div class="card">
+      <h4>Why non-linearity at all?</h4>
+      <p>Stacking convolutions without a non-linear activation between them is mathematically equivalent to one big linear operation — no matter how many layers, the network could only ever learn straight-line-like decision boundaries. ReLU (max(0, x)) is the default choice: it's cheap, avoids vanishing gradients better than sigmoid/tanh, and produces sparse activations.</p>
+    </div>
+    <div class="card">
+      <h4>ReLU intuition</h4>
+      <p>ReLU acts like a one-way valve: positive signals pass through unchanged, negative signals are shut off completely (set to zero). This lets the network build complex, piecewise-linear decision surfaces by combining many simple on/off switches.</p>
+    </div>
+  </div>
+
+  <div class="section-label">Common Misconceptions</div>
+  <div class="card misconception">
+    <div class="tag">Misconception</div>
+    <p><b>"Pooling and stride-2 convolution do the same job, so it doesn't matter which you use."</b> Both downsample, but pooling has no learnable weights and applies a fixed rule (max/average), while a strided convolution learns what to keep. Many modern architectures (e.g., ResNet variants) replace pooling with learned strided convolutions for more flexibility.</p>
+  </div>
+
+  <div class="section-label">Key Takeaways</div>
+  <div class="card">
+    <ul class="takeaways">
+      <li>Output size = floor((input − kernel + 2×padding)/stride) + 1</li>
+      <li>"Same" padding preserves spatial size; "valid" padding shrinks it</li>
+      <li>Max pooling keeps the strongest signal in a region; average pooling smooths it</li>
+      <li>Non-linear activations (usually ReLU) are what give CNNs their expressive power</li>
+    </ul>
+  </div>
+
+  <div class="quiz" id="quiz-2" data-total="4">
+    <div class="quiz-head"><h3>Module 2 Quiz</h3><span class="qcount">4 questions</span></div>
+    <div id="quiz2-body"></div>
+    <button class="btn btn-primary" id="quiz2-submit" onclick="submitQuiz(2)">Submit Answers</button>
+    <div class="quiz-result" id="quiz2-result">
+      <div class="score-num" id="quiz2-score">0/4</div>
+      <div class="score-msg" id="quiz2-msg"></div>
+      <button class="btn btn-primary" onclick="unlockNext(2)">Unlock Module 3 →</button>
+      <button class="btn btn-ghost" onclick="retryQuiz(2)">Retry Quiz</button>
+    </div>
+  </div>
+</section>
+
+<!-- ============ MODULE 3 ============ -->
+<section class="module" id="module-3" data-mod="3">
+  <div class="module-head"><span class="module-num">MODULE 03</span><span class="module-diff">Application</span></div>
+  <h2>Assembling a Full CNN Architecture</h2>
+  <p class="module-desc">Individual layers become powerful when stacked with intention. Learn how real architectures organize conv/pool/activation blocks, why depth matters, and how feature maps evolve from edges to objects.</p>
+
+  <div class="section-label">Core Explanation</div>
+  <div class="card">
+    <h4>The hierarchy of features</h4>
+    <p>Early convolutional layers (close to the input) tend to learn generic, low-level features: edges, corners, color blobs. Middle layers combine those into textures and simple shapes (curves, grids, eyes). Deep layers combine shapes into object parts and, by the final layers, whole object identities. This is why transfer learning works: early layers are reusable across almost any image task.</p>
+  </div>
+
+  <div class="card analogy">
+    <div class="tag">Analogy</div>
+    <p>Think of it like reading a paragraph: individual letters (edges) combine into words (textures/shapes), words combine into sentences (object parts, like "wheel" or "eye"), and sentences combine into the paragraph's overall meaning (the final classification: "car" or "cat"). Each layer of a CNN operates one level higher in this hierarchy than the one before it.</p>
+  </div>
+
+  <div class="section-label">Architecture Diagram — A Typical CNN Pipeline</div>
+  <div class="diagram-box">
+    <svg viewBox="0 0 700 200" width="100%" height="200" xmlns="http://www.w3.org/2000/svg">
+      <defs><marker id="arrow2" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 Z" fill="#5c6c7d"/></marker></defs>
+      <g font-family="ui-monospace,monospace" font-size="11" fill="#e7edf3" text-anchor="middle">
+        <rect x="10" y="70" width="60" height="60" rx="6" fill="#182330" stroke="#233040"/>
+        <text x="40" y="150" fill="#8fa1b3">Input</text>
+        <text x="40" y="105">Img</text>
+
+        <line x1="70" y1="100" x2="100" y2="100" stroke="#5c6c7d" marker-end="url(#arrow2)"/>
+        <rect x="100" y="60" width="60" height="80" rx="6" fill="#12332f" stroke="#4ce0d2"/>
+        <text x="130" y="150" fill="#4ce0d2">Conv+ReLU</text>
+        <text x="130" y="100">32ch</text>
+
+        <line x1="160" y1="100" x2="190" y2="100" stroke="#5c6c7d" marker-end="url(#arrow2)"/>
+        <rect x="190" y="75" width="50" height="50" rx="6" fill="#2a2313" stroke="#ffb454"/>
+        <text x="215" y="150" fill="#ffb454">Pool</text>
+        <text x="215" y="103">2×2</text>
+
+        <line x1="240" y1="100" x2="270" y2="100" stroke="#5c6c7d" marker-end="url(#arrow2)"/>
+        <rect x="270" y="55" width="60" height="90" rx="6" fill="#12332f" stroke="#4ce0d2"/>
+        <text x="300" y="150" fill="#4ce0d2">Conv+ReLU</text>
+        <text x="300" y="103">64ch</text>
+
+        <line x1="330" y1="100" x2="360" y2="100" stroke="#5c6c7d" marker-end="url(#arrow2)"/>
+        <rect x="360" y="80" width="50" height="40" rx="6" fill="#2a2313" stroke="#ffb454"/>
+        <text x="385" y="150" fill="#ffb454">Pool</text>
+        <text x="385" y="105">2×2</text>
+
+        <line x1="410" y1="100" x2="440" y2="100" stroke="#5c6c7d" marker-end="url(#arrow2)"/>
+        <rect x="440" y="65" width="50" height="70" rx="6" fill="#211230" stroke="#c084fc"/>
+        <text x="465" y="150" fill="#c084fc">Flatten</text>
+
+        <line x1="490" y1="100" x2="520" y2="100" stroke="#5c6c7d" marker-end="url(#arrow2)"/>
+        <rect x="520" y="55" width="60" height="90" rx="6" fill="#211230" stroke="#c084fc"/>
+        <text x="550" y="150" fill="#c084fc">Dense</text>
+        <text x="550" y="103">FC</text>
+
+        <line x1="580" y1="100" x2="610" y2="100" stroke="#5c6c7d" marker-end="url(#arrow2)"/>
+        <rect x="610" y="75" width="60" height="50" rx="6" fill="#0f2a1a" stroke="#7ee08a"/>
+        <text x="640" y="150" fill="#7ee08a">Softmax</text>
+        <text x="640" y="103">10cls</text>
+      </g>
+    </svg>
+    <div class="diagram-cap">Feature maps shrink spatially but grow deeper (more channels) as you move through the network — trading resolution for abstraction.</div>
+  </div>
+
+  <div class="section-label">Comparison — Famous Architectures</div>
+  <div class="card">
+    <table class="cmp">
+      <tr><th>Model</th><th>Year</th><th>Key idea</th><th>Depth</th></tr>
+      <tr><td>LeNet-5</td><td>1998</td><td>First practical CNN, digit recognition</td><td>~7 layers</td></tr>
+      <tr><td>AlexNet</td><td>2012</td><td>ReLU + dropout + GPU training at scale</td><td>~8 layers</td></tr>
+      <tr><td>VGGNet</td><td>2014</td><td>Uniform stacks of small 3×3 filters</td><td>16–19 layers</td></tr>
+      <tr><td>ResNet</td><td>2015</td><td>Skip/residual connections enable very deep nets</td><td>50–152+ layers</td></tr>
+    </table>
+  </div>
+
+  <div class="section-label">Practical Exercise</div>
+  <div class="exercise">
+    <div class="tag">Try it</div>
+    <p>Very deep plain CNNs (no skip connections) often get <i>worse</i> training accuracy as you add more layers, even though they have more capacity. What problem does this describe?</p>
+    <select id="ex3a" style="background:var(--bg-alt);border:1px solid var(--border);color:var(--text);padding:8px;border-radius:6px;font-family:var(--mono);">
+      <option value="">Choose...</option>
+      <option value="a">Overfitting</option>
+      <option value="b">Degradation problem (vanishing gradients / optimization difficulty)</option>
+      <option value="c">Too much data augmentation</option>
+    </select>
+    <button class="btn btn-ghost" onclick="checkExSelect('ex3a', 'b', 'ex3a-fb', 'This is the degradation problem — ResNet\\'s residual connections were invented specifically to solve it.')">Check</button>
+    <div class="feedback" id="ex3a-fb"></div>
+  </div>
+
+  <div class="section-label">Common Misconceptions</div>
+  <div class="card misconception">
+    <div class="tag">Misconception</div>
+    <p><b>"Deeper is always strictly better."</b> Beyond a point, plain (non-residual) networks degrade in accuracy due to optimization difficulty, not just overfitting. Depth needs to be paired with techniques like residual connections, batch normalization, and careful initialization to actually help.</p>
+  </div>
+
+  <div class="section-label">Key Takeaways</div>
+  <div class="card">
+    <ul class="takeaways">
+      <li>Feature abstraction increases with depth: edges → textures → parts → objects</li>
+      <li>Channels typically increase while spatial size decreases through the network</li>
+      <li>Skip/residual connections were invented to make very deep networks trainable</li>
+      <li>Transfer learning works because early conv layers are broadly reusable</li>
+    </ul>
+  </div>
+
+  <div class="quiz" id="quiz-3" data-total="4">
+    <div class="quiz-head"><h3>Module 3 Quiz</h3><span class="qcount">4 questions</span></div>
+    <div id="quiz3-body"></div>
+    <button class="btn btn-primary" id="quiz3-submit" onclick="submitQuiz(3)">Submit Answers</button>
+    <div class="quiz-result" id="quiz3-result">
+      <div class="score-num" id="quiz3-score">0/4</div>
+      <div class="score-msg" id="quiz3-msg"></div>
+      <button class="btn btn-primary" onclick="unlockNext(3)">Unlock Module 4 →</button>
+      <button class="btn btn-ghost" onclick="retryQuiz(3)">Retry Quiz</button>
+    </div>
+  </div>
+</section>
+
+<!-- ============ MODULE 4 ============ -->
+<section class="module" id="module-4" data-mod="4">
+  <div class="module-head"><span class="module-num">MODULE 04</span><span class="module-diff">Mastery</span></div>
+  <h2>Training, Regularization & Real-World Tuning</h2>
+  <p class="module-desc">Building the architecture is half the job. Now master how to actually train a CNN well: avoiding overfitting, choosing hyperparameters, and reading training curves like a diagnostician.</p>
+
+  <div class="section-label">Core Explanation</div>
+  <div class="card">
+    <h4>Overfitting and how CNNs fight it</h4>
+    <p>CNNs, especially deep ones, can memorize training data rather than learning generalizable patterns — you'll see training accuracy climb while validation accuracy stalls or drops. Standard countermeasures: <b>data augmentation</b> (random crops, flips, rotations — synthetically grows the dataset), <b>dropout</b> (randomly zeroing activations during training so the network can't rely on any single neuron), <b>batch normalization</b> (stabilizes and speeds up training by normalizing layer inputs), and <b>weight decay / L2 regularization</b> (discourages overly large weights).</p>
+  </div>
+
+  <div class="card analogy">
+    <div class="tag">Analogy</div>
+    <p>Dropout is like practicing a team sport where a random subset of players sits out every single practice. No player can become the one indispensable star everyone relies on — the whole team is forced to develop redundant, robust skills so it performs well no matter who's on the field on game day (test time, when everyone plays).</p>
+  </div>
+
+  <div class="section-label">Reading Training Curves</div>
+  <div class="diagram-box">
+    <svg viewBox="0 0 640 220" width="100%" height="220" xmlns="http://www.w3.org/2000/svg">
+      <line x1="50" y1="20" x2="50" y2="190" stroke="#233040"/>
+      <line x1="50" y1="190" x2="600" y2="190" stroke="#233040"/>
+      <text x="10" y="20" fill="#8fa1b3" font-family="ui-monospace,monospace" font-size="11">loss</text>
+      <text x="560" y="205" fill="#8fa1b3" font-family="ui-monospace,monospace" font-size="11">epoch</text>
+      <polyline points="50,170 120,140 200,105 280,80 360,60 440,45 520,35 600,28" fill="none" stroke="#4ce0d2" stroke-width="2.5"/>
+      <polyline points="50,175 120,150 200,120 280,100 360,95 440,105 520,125 600,150" fill="none" stroke="#ff7a6b" stroke-width="2.5"/>
+      <circle cx="360" cy="95" r="4" fill="#ffb454"/>
+      <text x="370" y="90" fill="#ffb454" font-family="ui-monospace,monospace" font-size="11">overfitting starts here</text>
+      <text x="480" y="45" fill="#4ce0d2" font-family="ui-monospace,monospace" font-size="12">train loss</text>
+      <text x="480" y="160" fill="#ff7a6b" font-family="ui-monospace,monospace" font-size="12">val loss</text>
+    </svg>
+    <div class="diagram-cap">Training loss keeps falling while validation loss bottoms out and rises — the classic overfitting signature.</div>
+  </div>
+
+  <div class="section-label">Comparison — Regularization Techniques</div>
+  <div class="card">
+    <table class="cmp">
+      <tr><th>Technique</th><th>What it does</th><th>When to reach for it</th></tr>
+      <tr><td>Data augmentation</td><td>Synthetically diversifies training images</td><td>Almost always, especially with limited data</td></tr>
+      <tr><td>Dropout</td><td>Randomly disables neurons during training</td><td>Fully-connected layers, moderate-to-large nets</td></tr>
+      <tr><td>Batch normalization</td><td>Normalizes activations per batch</td><td>Deep networks, to stabilize/speed training</td></tr>
+      <tr><td>Weight decay (L2)</td><td>Penalizes large weight magnitudes</td><td>General-purpose, combine with others</td></tr>
+      <tr><td>Early stopping</td><td>Halts training when val loss stops improving</td><td>Always monitor as a safety net</td></tr>
+    </table>
+  </div>
+
+  <div class="section-label">Practical Exercise — Diagnose the Model</div>
+  <div class="exercise">
+    <div class="tag">Try it</div>
+    <p>Training accuracy is 65% and validation accuracy is 63% after many epochs — both plateaued low. Is this overfitting, underfitting, or a good fit?</p>
+    <select id="ex4a" style="background:var(--bg-alt);border:1px solid var(--border);color:var(--text);padding:8px;border-radius:6px;font-family:var(--mono);">
+      <option value="">Choose...</option>
+      <option value="a">Overfitting</option>
+      <option value="b">Underfitting</option>
+      <option value="c">Good fit</option>
+    </select>
+    <button class="btn btn-ghost" onclick="checkExSelect('ex4a', 'b', 'ex4a-fb', 'Both accuracies are low and close together — the model lacks capacity or training, not generalizing badly. That\\'s underfitting; try a bigger model, more epochs, or less regularization.')">Check</button>
+    <div class="feedback" id="ex4a-fb"></div>
+  </div>
+
+  <div class="section-label">Common Misconceptions</div>
+  <div class="card misconception">
+    <div class="tag">Misconception</div>
+    <p><b>"More dropout is always safer."</b> Excessive dropout can cause underfitting — the network loses too much capacity to learn the training signal at all. Dropout rates are a hyperparameter to tune, not a dial to max out.</p>
+  </div>
+
+  <div class="section-label">Key Takeaways</div>
+  <div class="card">
+    <ul class="takeaways">
+      <li>Watch the gap between training and validation curves to diagnose over/underfitting</li>
+      <li>Augmentation, dropout, batch norm, and weight decay are complementary, not exclusive</li>
+      <li>Early stopping is a free, always-on safety net</li>
+      <li>Underfitting needs more capacity/training; overfitting needs more regularization/data</li>
+    </ul>
+  </div>
+
+  <div class="quiz" id="quiz-4" data-total="4">
+    <div class="quiz-head"><h3>Module 4 Quiz</h3><span class="qcount">4 questions</span></div>
+    <div id="quiz4-body"></div>
+    <button class="btn btn-primary" id="quiz4-submit" onclick="submitQuiz(4)">Submit Answers</button>
+    <div class="quiz-result" id="quiz4-result">
+      <div class="score-num" id="quiz4-score">0/4</div>
+      <div class="score-msg" id="quiz4-msg"></div>
+      <button class="btn btn-primary" onclick="goToFinale()">Go to Final Challenge →</button>
+      <button class="btn btn-ghost" onclick="retryQuiz(4)">Retry Quiz</button>
+    </div>
+  </div>
+</section>
+
+<!-- ============ FINALE ============ -->
+<section class="finale" id="finale">
+  <div class="module-head"><span class="module-num">FINAL CHALLENGE</span></div>
+  <h2>Design a CNN for a Real Problem</h2>
+  <p class="module-desc">You're given a dataset of 64×64 RGB images of 5 plant disease classes, ~3,000 labeled images total. Sketch your architecture decisions below — there's no single right answer, but justify each choice against what you learned.</p>
+
+  <div class="card exercise">
+    <div class="tag">Challenge</div>
+    <p><b>1.</b> With only ~3,000 images, would you train from scratch or use transfer learning? Why?</p>
+    <p><b>2.</b> Given the small dataset, name two regularization techniques you'd prioritize.</p>
+    <p><b>3.</b> Roughly how many conv blocks would you use, and would you go wider or deeper first?</p>
+    <p><b>4.</b> What would you watch in your training curves to know when to stop?</p>
+    <textarea rows="6" style="width:100%; background:var(--bg-alt); border:1px solid var(--border); color:var(--text); border-radius:8px; padding:12px; font-family:var(--sans); margin-top:10px;" placeholder="Write your architecture plan and reasoning here — this is for your own reflection, not graded."></textarea>
+    <p style="margin-top:10px; font-size:13px;"><b>Suggested strong answer:</b> Transfer learning (e.g. a small pretrained backbone) because 3,000 images is too little to train a deep CNN from scratch reliably. Prioritize data augmentation and dropout/weight decay given the small dataset. Prefer a shallower, pretrained-backbone approach over building very deep custom layers. Watch validation loss for the overfitting inflection point and use early stopping.</p>
+  </div>
+
+  <div class="section-label">Cheat Sheet</div>
+  <div class="cheat-grid">
+    <div class="card">
+      <h4>Output size formula</h4>
+      <p class="mono" style="color:var(--cyan);">out = floor((in − k + 2p)/s) + 1</p>
+    </div>
+    <div class="card">
+      <h4>Layer order (typical block)</h4>
+      <p>Conv → BatchNorm → ReLU → (Pool)</p>
+    </div>
+    <div class="card">
+      <h4>Overfitting signal</h4>
+      <p>Train loss ↓, val loss ↑ (or plateaus then rises)</p>
+    </div>
+    <div class="card">
+      <h4>Underfitting signal</h4>
+      <p>Both train & val accuracy low and close together</p>
+    </div>
+    <div class="card">
+      <h4>Go-to regularizers</h4>
+      <p>Augmentation, dropout, weight decay, early stopping</p>
+    </div>
+    <div class="card">
+      <h4>Small dataset rule of thumb</h4>
+      <p>Prefer transfer learning over training deep nets from scratch</p>
+    </div>
+  </div>
+
+  <div class="section-label">Summary Notes</div>
+  <div class="card">
+    <p>Convolution replaces dense connections with small, shared, sliding filters — dramatically cutting parameters while preserving spatial structure. Stride and padding control output size; pooling and activation functions add downsampling and non-linearity. Stacked layers build a hierarchy from edges to full objects, and very deep networks need residual connections to train well. Finally, generalization is won or lost in training: watch your curves, and reach for augmentation, dropout, batch norm, weight decay, and early stopping as your toolkit.</p>
+  </div>
+
+  <div class="section-label">Continue Learning</div>
+  <div class="res-grid">
+    <div class="card res-card"><a href="https://www.deeplearningbook.org/" target="_blank">Deep Learning (Goodfellow, Bengio, Courville)</a><p>The standard textbook reference, free online — Ch. 9 covers CNNs in depth.</p></div>
+    <div class="card res-card"><a href="https://cs231n.github.io/" target="_blank">CS231n: CNNs for Visual Recognition</a><p>Stanford's course notes — the classic hands-on CNN curriculum.</p></div>
+    <div class="card res-card"><a href="https://pytorch.org/tutorials/" target="_blank">PyTorch Official Tutorials</a><p>Documentation and code walkthroughs for building real CNNs.</p></div>
+    <div class="card res-card"><a href="https://www.tensorflow.org/tutorials/images/cnn" target="_blank">TensorFlow CNN Guide</a><p>Official documentation for a from-scratch Keras CNN.</p></div>
+    <div class="card res-card"><a href="https://arxiv.org/abs/1512.03385" target="_blank">Deep Residual Learning (ResNet paper, 2015)</a><p>The original research paper introducing skip connections.</p></div>
+    <div class="card res-card"><a href="https://arxiv.org/abs/1409.1556" target="_blank">VGGNet paper (2014)</a><p>Research paper on very deep networks with small filters.</p></div>
+    <div class="card res-card"><a href="https://www.reddit.com/r/MachineLearning/" target="_blank">r/MachineLearning</a><p>Active community for papers, discussion, and questions.</p></div>
+    <div class="card res-card"><a href="https://www.kaggle.com/" target="_blank">Kaggle</a><p>Practice platform with real image datasets and competitions.</p></div>
+    <div class="card res-card"><a href="https://discuss.pytorch.org/" target="_blank">PyTorch Forums</a><p>Community Q&A for implementation-level questions.</p></div>
+  </div>
+
+  <div class="section-label">Search Keywords</div>
+  <div class="card">
+    <span class="kw">receptive field</span><span class="kw">feature map visualization</span><span class="kw">transfer learning CNN</span>
+    <span class="kw">batch normalization explained</span><span class="kw">residual connections</span><span class="kw">grad-CAM</span>
+    <span class="kw">data augmentation techniques</span><span class="kw">1x1 convolution</span><span class="kw">global average pooling</span>
+  </div>
+
+  <div class="section-label">Additional AI Prompts for Further Learning</div>
+  <div class="card">
+    <ul class="takeaways">
+      <li>"Explain the receptive field of a 3-layer CNN with 3×3 filters and stride 1, step by step."</li>
+      <li>"Compare ResNet, VGG, and EfficientNet in terms of accuracy vs. parameter count."</li>
+      <li>"Walk me through implementing a CNN from scratch in PyTorch for CIFAR-10."</li>
+      <li>"What is Grad-CAM and how does it visualize what a CNN is 'looking at'?"</li>
+      <li>"Explain depthwise separable convolutions and why MobileNet uses them."</li>
+    </ul>
+  </div>
+
+  <div style="text-align:center; margin-top:40px;">
+    <div class="score-num" style="font-size:60px;">🏅</div>
+    <h3>Mastery Certificate Unlocked</h3>
+    <p class="score-msg" id="finalMsg">Complete all 4 quizzes to earn full mastery status.</p>
+    <button class="btn btn-primary" onclick="window.print()">🖨 Print / Save Notes</button>
+  </div>
+</section>
+
+</div>
+
+<button class="btn btn-ghost print-btn" onclick="window.print()">🖨 Print Notes</button>
+
+<footer>INTERACTIVE LEARNING STUDIO — CONVOLUTIONAL NEURAL NETWORKS · BUILT FOR DEEP FOCUS LEARNING</footer>
+
+<script>
+/* ================= STATE ================= */
+const state = { unlocked:[1], scores:{}, currentView:'hero' };
+const totalSteps = 6; // hero + 4 modules + finale
+
+function updateProgress(){
+  const doneModules = Object.keys(state.scores).length;
+  const pct = Math.min(100, Math.round((doneModules/4)*100));
+  document.getElementById('progressbar').style.width = pct + '%';
+  renderNav();
+}
+
+function renderNav(){
+  const nav = document.getElementById('navsteps');
+  nav.innerHTML='';
+  const labels = ['Intro','M1','M2','M3','M4','Final'];
+  labels.forEach((l,i)=>{
+    const el = document.createElement('div');
+    el.className='navstep';
+    el.textContent = i===0? '•' : (i===5? '★' : i);
+    const modIdx = i; // 0=intro,1-4 modules,5 finale
+    const locked = modIdx>0 && modIdx<5 && !state.unlocked.includes(modIdx);
+    const finaleLocked = modIdx===5 && Object.keys(state.scores).length<4;
+    if(locked || finaleLocked) el.classList.add('locked');
+    if(state.scores[modIdx]!==undefined) el.classList.add('done');
+    el.title = l;
+    el.onclick = ()=>{
+      if(locked||finaleLocked) return;
+      if(modIdx===0) goToHero();
+      else if(modIdx===5) goToFinale();
+      else goToModule(modIdx);
+    };
+    nav.appendChild(el);
+  });
+}
+
+function hideAll(){
+  document.querySelectorAll('.module').forEach(m=>m.classList.remove('active'));
+  document.getElementById('finale').classList.remove('active');
+}
+function goToHero(){ hideAll(); window.scrollTo({top:0,behavior:'smooth'}); }
+function goToModule(n){
+  hideAll();
+  document.getElementById('module-'+n).classList.add('active');
+  document.getElementById('module-'+n).scrollIntoView({behavior:'smooth'});
+}
+function goToFinale(){
+  hideAll();
+  document.getElementById('finale').classList.add('active');
+  document.getElementById('finale').scrollIntoView({behavior:'smooth'});
+  if(Object.keys(state.scores).length>=4){
+    document.getElementById('finalMsg').textContent = "All four modules complete — you've earned full mastery status. Nicely done!";
+  }
+}
+function unlockNext(n){
+  if(!state.unlocked.includes(n+1)) state.unlocked.push(n+1);
+  updateProgress();
+  goToModule(n+1);
+}
+
+/* ================= HERO KERNEL DEMO ================= */
+(function(){
+  const canvas = document.getElementById('kernelCanvas');
+  const ctx = canvas.getContext('2d');
+  const gridN = 8, cell = 220/gridN;
+  // simple synthetic image: vertical edge
+  const img = [];
+  for(let y=0;y<gridN;y++){ const row=[]; for(let x=0;x<gridN;x++){ row.push(x<gridN/2?0.2:0.9);} img.push(row);}
+  const kernel = [[-1,0,1],[-1,0,1],[-1,0,1]]; // vertical edge detector
+  let kx=2, ky=2;
+
+  function draw(){
+    ctx.clearRect(0,0,220,220);
+    for(let y=0;y<gridN;y++){
+      for(let x=0;x<gridN;x++){
+        const v = img[y][x];
+        ctx.fillStyle = `rgb(${Math.round(v*220)},${Math.round(v*230)},${Math.round(v*235)})`;
+        ctx.fillRect(x*cell,y*cell,cell-1,cell-1);
+      }
+    }
+    ctx.strokeStyle='#ffb454'; ctx.lineWidth=2.5;
+    ctx.strokeRect(kx*cell, ky*cell, 3*cell, 3*cell);
+    document.getElementById('kx').textContent = kx+','+ky;
+    let sum=0;
+    for(let j=0;j<3;j++) for(let i=0;i<3;i++) sum += img[ky+j][kx+i]*kernel[j][i];
+    document.getElementById('kout').textContent = sum.toFixed(2);
+  }
+  canvas.addEventListener('click', e=>{
+    const rect = canvas.getBoundingClientRect();
+    const mx = Math.floor((e.clientX-rect.left)/cell);
+    const my = Math.floor((e.clientY-rect.top)/cell);
+    kx = Math.min(Math.max(mx,0), gridN-3);
+    ky = Math.min(Math.max(my,0), gridN-3);
+    draw();
+  });
+  draw();
+  let dir=1;
+  setInterval(()=>{
+    kx += dir;
+    if(kx>=gridN-3||kx<=0) dir*=-1;
+    draw();
+  }, 900);
+})();
+
+/* ================= MODULE 1 SVG GRIDS ================= */
+(function(){
+  const input = [[1,1,0,0,1,0],[0,1,1,0,1,1],[1,0,1,1,0,0],[0,1,0,1,1,1],[1,1,1,0,0,1],[0,0,1,1,1,0]];
+  const kernel = [[1,0,-1],[1,0,-1],[1,0,-1]];
+  const ig = document.getElementById('inputgrid');
+  const cs=24;
+  for(let y=0;y<6;y++) for(let x=0;x<6;x++){
+    const rect = document.createElementNS('http://www.w3.org/2000/svg','rect');
+    rect.setAttribute('x', 10+x*cs); rect.setAttribute('y', 40+y*cs);
+    rect.setAttribute('width', cs-2); rect.setAttribute('height', cs-2);
+    rect.setAttribute('fill', input[y][x]? '#182330':'#0e141b');
+    rect.setAttribute('stroke','#233040'); rect.setAttribute('rx','2');
+    ig.appendChild(rect);
+    const t = document.createElementNS('http://www.w3.org/2000/svg','text');
+    t.setAttribute('x', 10+x*cs+cs/2-3); t.setAttribute('y', 40+y*cs+cs/2+4);
+    t.setAttribute('fill', '#8fa1b3'); t.setAttribute('font-size','10');
+    t.textContent = input[y][x];
+    ig.appendChild(t);
+  }
+  const og = document.getElementById('outputgrid');
+  const ocs=22;
+  for(let y=0;y<4;y++) for(let x=0;x<4;x++){
+    let sum=0;
+    for(let j=0;j<3;j++) for(let i=0;i<3;i++) sum += input[y+j][x+i]*kernel[j][i];
+    const rect = document.createElementNS('http://www.w3.org/2000/svg','rect');
+    rect.setAttribute('x', 450+x*ocs); rect.setAttribute('y', 40+y*ocs);
+    rect.setAttribute('width', ocs-2); rect.setAttribute('height', ocs-2);
+    rect.setAttribute('fill', '#2a2313'); rect.setAttribute('stroke','#ffb454'); rect.setAttribute('rx','2');
+    og.appendChild(rect);
+    const t = document.createElementNS('http://www.w3.org/2000/svg','text');
+    t.setAttribute('x', 450+x*ocs+ocs/2-6); t.setAttribute('y', 40+y*ocs+ocs/2+4);
+    t.setAttribute('fill', '#ffb454'); t.setAttribute('font-size','10');
+    t.textContent = sum;
+    og.appendChild(t);
+  }
+})();
+
+/* ================= MODULE 1 INTERACTIVE LAB ================= */
+(function(){
+  const input = [[1,1,0,0,1,0],[0,1,1,0,1,1],[1,0,1,1,0,0],[0,1,0,1,1,1],[1,1,1,0,0,1],[0,0,1,1,1,0]];
+  const kernel = [[1,0,-1],[1,0,-1],[1,0,-1]];
+  const li = document.getElementById('labInput');
+  const lo = document.getElementById('labOutput');
+  const inputCells=[], outputCells=[];
+  for(let y=0;y<6;y++) for(let x=0;x<6;x++){
+    const d = document.createElement('div'); d.className='cell'; d.textContent=input[y][x];
+    d.dataset.x=x; d.dataset.y=y;
+    d.onclick=()=>selectPos(Math.min(x,3), Math.min(y,3));
+    li.appendChild(d); inputCells.push(d);
+  }
+  for(let y=0;y<4;y++) for(let x=0;x<4;x++){
+    const d = document.createElement('div'); d.className='cell out'; d.textContent='';
+    lo.appendChild(d); outputCells.push(d);
+  }
+  function selectPos(kx,ky){
+    inputCells.forEach(c=>c.classList.remove('hl'));
+    let sum=0;
+    for(let j=0;j<3;j++) for(let i=0;i<3;i++){
+      const cx=kx+i, cy=ky+j;
+      const cell = inputCells[cy*6+cx];
+      cell.classList.add('hl');
+      sum += input[cy][cx]*kernel[j][i];
+    }
+    outputCells.forEach(c=>c.classList.remove('hl'));
+    const oidx = ky*4+kx;
+    outputCells[oidx].textContent = sum;
+    outputCells[oidx].classList.add('hl');
+  }
+  selectPos(0,0);
+})();
+
+/* ================= MODULE 2 POOL SVG ================= */
+(function(){
+  const fm = [[1,3,2,4],[5,6,1,2],[2,1,7,3],[4,3,2,1]];
+  const colors = ['#4ce0d2','#ffb454','#ff7a6b','#7ee08a'];
+  const pi = document.getElementById('poolInput');
+  const cs=30;
+  for(let y=0;y<4;y++) for(let x=0;x<4;x++){
+    const blockIdx = (y<2?0:2) + (x<2?0:1);
+    const rect = document.createElementNS('http://www.w3.org/2000/svg','rect');
+    rect.setAttribute('x', 10+x*cs); rect.setAttribute('y', 30+y*cs);
+    rect.setAttribute('width', cs-2); rect.setAttribute('height', cs-2);
+    rect.setAttribute('fill', 'none'); rect.setAttribute('stroke', colors[blockIdx]); rect.setAttribute('stroke-width','1.5'); rect.setAttribute('rx','2');
+    pi.appendChild(rect);
+    const t = document.createElementNS('http://www.w3.org/2000/svg','text');
+    t.setAttribute('x', 10+x*cs+cs/2-4); t.setAttribute('y', 30+y*cs+cs/2+4);
+    t.setAttribute('fill', '#e7edf3'); t.setAttribute('font-size','12');
+    t.textContent = fm[y][x];
+    pi.appendChild(t);
+  }
+  const po = document.getElementById('poolOutput');
+  const blocks = [[fm[0][0],fm[0][1],fm[1][0],fm[1][1]],[fm[0][2],fm[0][3],fm[1][2],fm[1][3]],[fm[2][0],fm[2][1],fm[3][0],fm[3][1]],[fm[2][2],fm[2][3],fm[3][2],fm[3][3]]];
+  for(let y=0;y<2;y++) for(let x=0;x<2;x++){
+    const idx=y*2+x;
+    const max = Math.max(...blocks[idx]);
+    const rect = document.createElementNS('http://www.w3.org/2000/svg','rect');
+    rect.setAttribute('x', 330+x*40); rect.setAttribute('y', 30+y*40);
+    rect.setAttribute('width', 36); rect.setAttribute('height', 36);
+    rect.setAttribute('fill', '#121a23'); rect.setAttribute('stroke', colors[idx]); rect.setAttribute('stroke-width','2'); rect.setAttribute('rx','4');
+    po.appendChild(rect);
+    const t = document.createElementNS('http://www.w3.org/2000/svg','text');
+    t.setAttribute('x', 330+x*40+18-5); t.setAttribute('y', 30+y*40+22);
+    t.setAttribute('fill', colors[idx]); t.setAttribute('font-size','15'); t.setAttribute('font-weight','700');
+    t.textContent = max;
+    po.appendChild(t);
+  }
+})();
+
+/* ================= EXERCISE CHECKERS ================= */
+function checkEx(inputId, answer, fbId, note){
+  const val = parseFloat(document.getElementById(inputId).value);
+  const fb = document.getElementById(fbId);
+  fb.classList.add('show');
+  if(val===answer){
+    fb.className='feedback show ok';
+    fb.textContent = '✓ Correct!' + (note? ' '+note:'');
+  } else {
+    fb.className='feedback show bad';
+    fb.textContent = '✗ Not quite. Correct answer: '+answer+(note? '. '+note:'');
+  }
+}
+function checkExSelect(selId, answer, fbId, note){
+  const val = document.getElementById(selId).value;
+  const fb = document.getElementById(fbId);
+  fb.classList.add('show');
+  if(val===answer){
+    fb.className='feedback show ok';
+    fb.textContent = '✓ Correct! '+note;
+  } else {
+    fb.className='feedback show bad';
+    fb.textContent = '✗ Not quite. '+note;
+  }
+}
+
+/* ================= QUIZ DATA ================= */
+const quizData = {
+  1:[
+    {q:"What is the main advantage of local connectivity + weight sharing in convolution?", opts:["It makes training slower but more accurate","It drastically reduces parameters and reuses the same filter across the image","It removes the need for activation functions","It only works on grayscale images"], correct:1, exp:"Local connectivity + weight sharing means each filter has few parameters and the same filter is applied everywhere, cutting total parameters dramatically versus a dense layer."},
+    {q:"What is the output of a single convolution operation at one position called?", opts:["A gradient","A kernel","A dot product summarized into one feature map value","A pooling result"], correct:2, exp:"Each position of the sliding kernel produces one value via element-wise multiply and sum — that becomes one pixel of the output feature map."},
+    {q:"Why do deep learning frameworks technically perform cross-correlation but call it 'convolution'?", opts:["Because cross-correlation and true convolution give identical results for learned filters in practice","Because it's a marketing term","Because true convolution isn't possible on GPUs","Because cross-correlation requires flipping the kernel first"], correct:0, exp:"Since the filter's weights are learned, whether or not the kernel is flipped makes no practical difference to what the network can learn — so frameworks skip the flip and still call it convolution."},
+    {q:"A 3×3 filter over 3 input channels, with bias, has how many learnable parameters?", opts:["9","10","27","28"], correct:3, exp:"3×3×3 = 27 weights (one full 3×3 kernel per input channel) plus 1 bias = 28 total."}
+  ],
+  2:[
+    {q:"Which formula correctly computes convolution output size along one dimension?", opts:["input × kernel / stride","floor((input − kernel + 2×padding)/stride) + 1","input + kernel − padding","input / stride − kernel"], correct:1, exp:"This is the standard formula: floor((input − kernel + 2×padding)/stride) + 1."},
+    {q:"Input 28×28, kernel 3×3, padding 0, stride 2 — what is the output size?", opts:["13×13","14×14","26×26","9×9"], correct:0, exp:"floor((28-3+0)/2)+1 = floor(12.5)+1 = 12+1 = 13."},
+    {q:"What does max pooling do, conceptually?", opts:["Learns new filter weights on the feature map","Adds a border of zeros around the input","Keeps the strongest activation from each small region, discarding the rest","Applies a non-linear activation function"], correct:2, exp:"Max pooling summarizes each small window (e.g. 2×2) by keeping only its maximum value, shrinking the feature map."},
+    {q:"Why is a non-linear activation function like ReLU necessary between conv layers?", opts:["Without it, stacked convolutions collapse into one big linear operation","It reduces the number of parameters","It only matters for the very last layer","It replaces the need for pooling"], correct:0, exp:"Without non-linearity, no matter how many linear layers you stack, the whole network is mathematically equivalent to a single linear transformation — unable to model complex patterns."}
+  ],
+  3:[
+    {q:"What kind of features do early convolutional layers typically learn?", opts:["Whole object identities","Low-level features like edges, corners, and color blobs","Class probabilities","Dataset labels"], correct:1, exp:"Early layers are close to the raw pixels and learn simple, generic features like edges and blobs; complexity builds up with depth."},
+    {q:"As you move deeper into a typical CNN, what usually happens to spatial size and channel count?", opts:["Both increase","Both decrease","Spatial size decreases, channel count increases","Spatial size increases, channel count decreases"], correct:2, exp:"Pooling/striding shrinks spatial dimensions while more filters per layer increase the channel (depth) count — trading resolution for abstraction."},
+    {q:"What problem do residual (skip) connections in ResNet primarily solve?", opts:["Reduce image resolution","Convert RGB to grayscale","The degradation problem that makes very deep plain networks hard to optimize","Eliminate the need for pooling layers"], correct:2, exp:"Skip connections let gradients flow more directly through very deep networks, solving the degradation/optimization difficulty that plain deep stacks suffer from."},
+    {q:"Why does transfer learning tend to work well with CNNs?", opts:["Because deep layers are always frozen","Because early convolutional layers learn generic features reusable across many image tasks","Because all CNNs have identical architectures","Because it eliminates the need for any training data"], correct:1, exp:"Early layers learn broadly useful features like edges and textures, which transfer well to new but related image tasks — only later layers usually need retraining."}
+  ],
+  4:[
+    {q:"What does it mean when training loss keeps decreasing but validation loss starts rising?", opts:["Underfitting","The model is overfitting to the training data","Perfect convergence","The learning rate is too low"], correct:1, exp:"This is the classic overfitting signature: the model is memorizing training data at the cost of generalizing to unseen validation data."},
+    {q:"Which technique randomly disables neurons during training to reduce overfitting?", opts:["Batch normalization","Max pooling","Dropout","Weight decay"], correct:2, exp:"Dropout randomly zeroes a fraction of activations each training step, preventing the network from over-relying on specific neurons."},
+    {q:"Training accuracy 65%, validation accuracy 63%, both plateaued low — what's happening?", opts:["Overfitting","Underfitting","Perfect fit","Data leakage"], correct:1, exp:"Both scores are low and close together, meaning the model hasn't learned the training data well enough yet — this is underfitting, not overfitting."},
+    {q:"What is a 'free' safety-net technique that halts training once validation performance stops improving?", opts:["Data augmentation","Early stopping","Global average pooling","Stride 2 convolution"], correct:1, exp:"Early stopping monitors validation loss/accuracy and halts training once it stops improving, guarding against overfitting with almost no cost."}
+  ]
+};
+
+/* ================= RENDER QUIZZES ================= */
+function renderQuiz(n){
+  const body = document.getElementById('quiz'+n+'-body');
+  body.innerHTML='';
+  quizData[n].forEach((item, qi)=>{
+    const block = document.createElement('div'); block.className='qblock';
+    const qt = document.createElement('div'); qt.className='qtext'; qt.textContent = (qi+1)+'. '+item.q;
+    block.appendChild(qt);
+    item.opts.forEach((opt, oi)=>{
+      const b = document.createElement('button');
+      b.className='opt'; b.textContent = opt;
+      b.onclick=()=>selectOpt(n, qi, oi, b);
+      block.appendChild(b);
+    });
+    const ex = document.createElement('div'); ex.className='explain'; ex.id='exp-'+n+'-'+qi;
+    ex.textContent = item.exp;
+    block.appendChild(ex);
+    body.appendChild(block);
+  });
+}
+for(let i=1;i<=4;i++) renderQuiz(i);
+
+const answers = {1:{},2:{},3:{},4:{}};
+function selectOpt(n, qi, oi, btn){
+  if(answers[n][qi]!==undefined) return; // already answered
+  answers[n][qi]=oi;
+  const block = btn.parentElement;
+  const correct = quizData[n][qi].correct;
+  [...block.querySelectorAll('.opt')].forEach((o,idx)=>{
+    o.disabled=true;
+    if(idx===correct) o.classList.add('correct');
+    else if(idx===oi) o.classList.add('wrong');
+  });
+  document.getElementById('exp-'+n+'-'+qi).classList.add('show');
+}
+
+function submitQuiz(n){
+  const qs = quizData[n];
+  let score=0;
+  for(let qi=0; qi<qs.length; qi++){
+    if(answers[n][qi]===undefined){ alert('Please answer all questions before submitting.'); return; }
+    if(answers[n][qi]===qs[qi].correct) score++;
+  }
+  document.getElementById('quiz'+n+'-submit').style.display='none';
+  const resultBox = document.getElementById('quiz'+n+'-result');
+  resultBox.classList.add('show');
+  document.getElementById('quiz'+n+'-score').textContent = score+'/'+qs.length;
+  const pct = Math.round(score/qs.length*100);
+  let msg;
+  if(pct>=75) msg = 'Great work — module badge earned! You can move on.';
+  else msg = 'Below 75%. Review the explanations above, then retry the quiz to unlock the next module.';
+  document.getElementById('quiz'+n+'-msg').textContent = msg;
+  const unlockBtn = resultBox.querySelector('.btn-primary');
+  if(pct>=75){
+    unlockBtn.disabled=false;
+    state.scores[n]=score;
+    updateProgress();
+  } else {
+    unlockBtn.disabled=true;
+  }
+}
+function retryQuiz(n){
+  answers[n]={};
+  document.getElementById('quiz'+n+'-result').classList.remove('show');
+  document.getElementById('quiz'+n+'-submit').style.display='inline-flex';
+  renderQuiz(n);
+}
+
+updateProgress();
+</script>
+</body>
+</html>
