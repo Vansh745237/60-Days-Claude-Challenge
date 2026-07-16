@@ -1,0 +1,985 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI Workflow Architect — Building a REST/GraphQL API from Scratch</title>
+<style>
+:root{
+  --bg:#0B0F14;
+  --panel:#121820;
+  --panel-2:#182029;
+  --panel-3:#1E2731;
+  --hair:#232C36;
+  --text:#DCE3E8;
+  --text-dim:#7C8A96;
+  --signal:#4FD1C5;
+  --signal-dim:#2B6F68;
+  --route:#F2A65A;
+  --route-dim:#8A5C2C;
+  --danger:#E5626B;
+  --success:#6FCF97;
+  --radius:10px;
+  --serif:'Architect-Serif', Georgia, 'Times New Roman', serif;
+  --sans:'Architect-Sans', -apple-system, 'Segoe UI', sans-serif;
+  --mono:'Architect-Mono', 'SFMono-Regular', Consolas, 'Courier New', monospace;
+}
+*{box-sizing:border-box; margin:0; padding:0;}
+html{scroll-behavior:smooth;}
+body{background:var(--bg); color:var(--text); font-family:var(--sans),sans-serif; min-height:100vh; -webkit-font-smoothing:antialiased; transition:background .3s, color .3s;}
+body.light{
+  --bg:#F3F1EA; --panel:#FFFFFF; --panel-2:#FBFAF6; --panel-3:#F0EEE6;
+  --hair:#DAD5C7; --text:#1B2126; --text-dim:#5C6660;
+}
+::selection{background:var(--signal); color:#04201D;}
+button{font-family:inherit; cursor:pointer;}
+input,select,textarea{font-family:var(--mono); color:var(--text); background:var(--panel-3); border:1px solid var(--hair); border-radius:6px;}
+
+.shell{display:flex; min-height:100vh;}
+.sidebar{
+  width:238px; flex-shrink:0; background:var(--panel); border-right:1px solid var(--hair);
+  position:sticky; top:0; height:100vh; display:flex; flex-direction:column; padding:22px 16px; z-index:60;
+}
+.brand{font-family:var(--serif); font-size:18px; font-weight:600; display:flex; align-items:baseline; gap:8px;}
+.brand small{font-family:var(--mono); font-size:9.5px; color:var(--signal); letter-spacing:1.5px; text-transform:uppercase;}
+.brand-sub{font-size:10.5px; color:var(--text-dim); margin:4px 0 22px; line-height:1.5;}
+.nav{display:flex; flex-direction:column; gap:2px; flex:1; overflow-y:auto;}
+.nav-item{display:flex; align-items:center; gap:9px; padding:9px 10px; border-radius:7px; border:none; background:transparent; color:var(--text-dim); font-size:12.5px; text-align:left;}
+.nav-item .num{font-family:var(--mono); font-size:10px; opacity:.55; width:16px;}
+.nav-item:hover{background:var(--panel-2); color:var(--text);}
+.nav-item.active{background:var(--panel-2); color:var(--signal);}
+.nav-item.active .num{color:var(--signal); opacity:1;}
+.sidebar-foot{padding-top:12px; border-top:1px solid var(--hair); margin-top:10px; display:flex; flex-direction:column; gap:8px;}
+.mini-btn{background:var(--panel-2); border:1px solid var(--hair); color:var(--text-dim); font-size:10.5px; padding:8px 10px; border-radius:7px; display:flex; justify-content:space-between; align-items:center;}
+.mini-btn:hover{color:var(--text); border-color:var(--signal-dim);}
+.overall-progress{margin-top:6px;}
+.overall-progress .lbl{font-family:var(--mono); font-size:9px; text-transform:uppercase; letter-spacing:1px; color:var(--text-dim); margin-bottom:6px; display:flex; justify-content:space-between;}
+.pbar{height:6px; background:var(--panel-3); border-radius:20px; overflow:hidden; border:1px solid var(--hair);}
+.pbar>div{height:100%; background:linear-gradient(90deg,var(--signal-dim),var(--signal)); border-radius:20px; transition:width .4s;}
+
+.main{flex:1; min-width:0; padding:34px 42px 100px; max-width:1220px;}
+section.panel{display:none; animation:fade .3s ease;}
+section.panel.active{display:block;}
+@keyframes fade{from{opacity:0; transform:translateY(6px);} to{opacity:1; transform:translateY(0);}}
+
+.eyebrow{font-family:var(--mono); font-size:10.5px; letter-spacing:2px; text-transform:uppercase; color:var(--signal); margin-bottom:8px;}
+.page-title{font-family:var(--serif); font-size:30px; font-weight:600;}
+.page-desc{color:var(--text-dim); font-size:13.5px; margin-top:8px; max-width:680px; line-height:1.6;}
+.page-head{margin-bottom:26px;}
+
+.grid{display:grid; gap:16px;}
+.g2{grid-template-columns:1fr 1fr;}
+.g3{grid-template-columns:repeat(3,1fr);}
+.g4{grid-template-columns:repeat(4,1fr);}
+@media(max-width:900px){.g2,.g3,.g4{grid-template-columns:1fr;}}
+.card{background:var(--panel); border:1px solid var(--hair); border-radius:var(--radius); padding:20px;}
+.card h3{font-family:var(--serif); font-size:16px; margin-bottom:4px;}
+.card .sub{font-size:11.5px; color:var(--text-dim); margin-bottom:12px;}
+
+.btn{background:var(--signal); color:#04201D; border:none; font-weight:700; padding:10px 16px; border-radius:7px; font-size:12.5px; display:inline-flex; align-items:center; gap:6px;}
+.btn:hover{filter:brightness(1.08);}
+.btn.ghost{background:transparent; border:1px solid var(--hair); color:var(--text);}
+.btn.ghost:hover{border-color:var(--signal-dim);}
+.btn.sm{padding:7px 12px; font-size:11.5px;}
+
+/* ===== Hero API topology ===== */
+.hero{display:grid; grid-template-columns:1.3fr 1fr; gap:18px; margin-bottom:20px;}
+@media(max-width:900px){.hero{grid-template-columns:1fr;}}
+.topology{background:linear-gradient(180deg,var(--panel-3),var(--panel)); border:1px solid var(--hair); border-radius:var(--radius); padding:22px;}
+.topology .tag{font-family:var(--mono); font-size:10px; letter-spacing:1.5px; text-transform:uppercase; color:var(--text-dim);}
+.topology h2{font-family:var(--serif); font-size:21px; margin:6px 0 14px;}
+.route-map{display:flex; align-items:center; gap:8px; flex-wrap:wrap; font-family:var(--mono); font-size:11px;}
+.route-node{background:var(--panel-2); border:1px solid var(--hair); padding:8px 12px; border-radius:7px; display:flex; flex-direction:column; gap:2px; min-width:110px;}
+.route-node .method{font-size:9.5px; color:var(--signal); letter-spacing:1px;}
+.route-node .path{color:var(--text);}
+.route-arrow{color:var(--text-dim); font-size:14px;}
+.stat-block{display:flex; gap:22px; margin-top:18px; flex-wrap:wrap;}
+.stat-block .item{font-family:var(--mono);}
+.stat-block .item b{display:block; font-family:var(--serif); font-size:20px; color:var(--signal);}
+.stat-block .item span{font-size:10px; color:var(--text-dim); text-transform:uppercase; letter-spacing:1px;}
+
+.stack-card{background:var(--panel); border:1px solid var(--hair); border-radius:var(--radius); padding:22px; display:flex; flex-direction:column; justify-content:center;}
+.stack-card .tag{font-family:var(--mono); font-size:10px; letter-spacing:1.5px; text-transform:uppercase; color:var(--text-dim); margin-bottom:8px;}
+.stack-pill-row{display:flex; gap:8px; flex-wrap:wrap; margin-top:10px;}
+.pill{font-family:var(--mono); font-size:10.5px; padding:5px 10px; border-radius:20px; border:1px solid var(--hair); background:var(--panel-2);}
+.pill.signal{color:var(--signal); border-color:var(--signal-dim);}
+.pill.route{color:var(--route); border-color:var(--route-dim);}
+
+/* ===== Decision tree ===== */
+.dt-question{background:var(--panel); border:1px solid var(--hair); border-radius:var(--radius); padding:20px; margin-bottom:14px;}
+.dt-question h4{font-family:var(--serif); font-size:15px; margin-bottom:12px;}
+.dt-options{display:flex; gap:10px; flex-wrap:wrap;}
+.dt-opt{background:var(--panel-2); border:1px solid var(--hair); padding:10px 14px; border-radius:8px; font-size:12.5px;}
+.dt-opt:hover{border-color:var(--signal-dim);}
+.dt-opt.chosen{border-color:var(--signal); color:var(--signal); background:rgba(79,209,197,0.08);}
+.dt-result{background:linear-gradient(180deg,var(--panel-3),var(--panel)); border:1px solid var(--signal-dim); border-radius:var(--radius); padding:20px; margin-top:16px;}
+.dt-result .lbl{font-family:var(--mono); font-size:10px; letter-spacing:1.5px; text-transform:uppercase; color:var(--signal); margin-bottom:8px;}
+.dt-result h3{font-family:var(--serif); font-size:20px; margin-bottom:8px;}
+
+/* ===== Pipeline stepper ===== */
+.pipeline{display:flex; overflow-x:auto; gap:0; margin-bottom:22px; padding-bottom:6px;}
+.pipe-step{
+  flex-shrink:0; min-width:150px; padding:14px 16px; border:1px solid var(--hair); background:var(--panel);
+  border-right:none; position:relative; cursor:pointer; transition:all .15s ease;
+}
+.pipe-step:first-child{border-radius:8px 0 0 8px;}
+.pipe-step:last-child{border-radius:0 8px 8px 0; border-right:1px solid var(--hair);}
+.pipe-step .n{font-family:var(--mono); font-size:9.5px; color:var(--text-dim);}
+.pipe-step .t{font-family:var(--serif); font-size:13px; margin-top:4px; line-height:1.3;}
+.pipe-step:hover{background:var(--panel-2);}
+.pipe-step.active{background:rgba(79,209,197,0.09); border-color:var(--signal-dim);}
+.pipe-step.active .n{color:var(--signal);}
+.pipe-step.done::after{content:'✓'; position:absolute; top:8px; right:10px; color:var(--success); font-size:11px;}
+
+.stage-detail{background:var(--panel); border:1px solid var(--hair); border-radius:var(--radius); padding:24px;}
+.stage-head{display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:12px; margin-bottom:6px;}
+.stage-head h2{font-family:var(--serif); font-size:24px;}
+.stage-meta{display:flex; gap:14px; font-family:var(--mono); font-size:10.5px; color:var(--text-dim); margin-top:6px; flex-wrap:wrap;}
+.stage-meta b{color:var(--route);}
+.stage-objective{color:var(--text-dim); font-size:13px; margin:12px 0 20px; line-height:1.6; max-width:720px;}
+
+.sub-tabs{display:flex; gap:6px; flex-wrap:wrap; margin-bottom:18px; border-bottom:1px solid var(--hair); padding-bottom:12px;}
+.sub-tab{background:var(--panel-2); border:1px solid var(--hair); color:var(--text-dim); font-size:11px; padding:7px 12px; border-radius:20px;}
+.sub-tab.active{color:var(--signal); border-color:var(--signal-dim); background:rgba(79,209,197,.08);}
+.sub-panel{display:none;}
+.sub-panel.active{display:block; animation:fade .25s ease;}
+
+.task-row{display:flex; align-items:flex-start; gap:10px; padding:9px 0; border-bottom:1px solid var(--hair); font-size:13px;}
+.task-row input{margin-top:3px; accent-color:var(--signal);}
+.task-row span.done{text-decoration:line-through; color:var(--text-dim);}
+
+.tool-card{background:var(--panel-2); border:1px solid var(--hair); border-radius:8px; padding:14px; margin-bottom:10px;}
+.tool-card .row1{display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;}
+.tool-card .name{font-family:var(--serif); font-size:14.5px;}
+.tool-card .badge{font-family:var(--mono); font-size:9px; text-transform:uppercase; letter-spacing:1px; padding:3px 8px; border-radius:20px;}
+.tool-card .badge.best{background:rgba(79,209,197,.12); color:var(--signal); border:1px solid var(--signal-dim);}
+.tool-card .badge.alt{background:rgba(242,166,90,.12); color:var(--route); border:1px solid var(--route-dim);}
+.tool-card .why{font-size:12px; color:var(--text-dim); line-height:1.5;}
+
+.prompt-box{background:#04090C; border:1px solid var(--hair); border-radius:8px; padding:14px 16px; margin-bottom:10px; position:relative;}
+body.light .prompt-box{background:#111820;}
+.prompt-box code{font-family:var(--mono); font-size:12px; color:var(--signal); white-space:pre-wrap; line-height:1.6; display:block; padding-right:60px;}
+.copy-btn{position:absolute; top:10px; right:10px; background:var(--panel-3); border:1px solid var(--hair); color:var(--text-dim); font-size:10px; padding:4px 9px; border-radius:6px;}
+.copy-btn:hover{color:var(--signal);}
+
+.list-clean{list-style:none;}
+.list-clean li{padding:8px 0; border-bottom:1px solid var(--hair); font-size:13px; padding-left:18px; position:relative; line-height:1.5;}
+.list-clean li::before{content:'—'; position:absolute; left:0; color:var(--text-dim);}
+.list-clean.mistakes li::before{content:'✕'; color:var(--danger);}
+.list-clean.practices li::before{content:'✓'; color:var(--success);}
+.list-clean.outputs li::before{content:'→'; color:var(--signal);}
+
+.notes-area{width:100%; min-height:110px; padding:12px; border-radius:8px; font-size:12.5px; resize:vertical;}
+.stage-nav-btns{display:flex; justify-content:space-between; margin-top:22px;}
+
+/* ===== Comparison table ===== */
+table.cmp{width:100%; border-collapse:collapse; font-size:12.5px;}
+table.cmp th, table.cmp td{padding:10px 12px; border-bottom:1px solid var(--hair); text-align:left;}
+table.cmp th{font-family:var(--mono); font-size:10px; text-transform:uppercase; letter-spacing:1px; color:var(--text-dim);}
+table.cmp td.hl{color:var(--signal); font-weight:600;}
+
+.bookmark-item{display:flex; justify-content:space-between; align-items:center; padding:10px 0; border-bottom:1px solid var(--hair); font-size:13px;}
+.bookmark-item button{background:transparent; border:1px solid var(--hair); color:var(--text-dim); border-radius:6px; width:26px; height:26px; font-size:12px;}
+.bookmark-item button:hover{color:var(--danger); border-color:var(--danger);}
+.bookmark-star{background:transparent; border:none; color:var(--route); font-size:14px;}
+
+.divider{height:1px; background:var(--hair); margin:26px 0;}
+.footer-note{margin-top:40px; font-size:11px; color:var(--text-dim); text-align:center; padding-bottom:20px;}
+
+@media print{
+  .sidebar,.no-print{display:none !important;}
+  .main{padding:0; max-width:100%;}
+  section.panel{display:block !important; page-break-after:always;}
+  body{background:#fff; color:#000;}
+  .card,.stage-detail,.tool-card,.prompt-box{border:1px solid #ccc; background:#fff; color:#000;}
+  .prompt-box code{color:#000;}
+}
+@media(max-width:760px){
+  .shell{flex-direction:column;}
+  .sidebar{width:100%; height:auto; flex-direction:row; overflow-x:auto; position:relative; padding:12px;}
+  .nav{flex-direction:row;}
+  .sidebar-foot{display:none;}
+  .brand-sub{display:none;}
+  .main{padding:20px;}
+}
+::-webkit-scrollbar{width:8px; height:8px;}
+::-webkit-scrollbar-thumb{background:var(--hair); border-radius:8px;}
+</style>
+</head>
+<body>
+<div class="shell">
+  <aside class="sidebar">
+    <div class="brand">Workflow<small>Architect</small></div>
+    <div class="brand-sub">Building a REST/GraphQL API from scratch — Python · FastAPI/Django</div>
+    <nav class="nav" id="navList">
+      <button class="nav-item active" data-panel="overview"><span class="num">01</span> Overview</button>
+      <button class="nav-item" data-panel="decision"><span class="num">02</span> Framework Decision</button>
+      <button class="nav-item" data-panel="pipeline"><span class="num">03</span> Workflow Pipeline</button>
+      <button class="nav-item" data-panel="compare"><span class="num">04</span> Tool Comparisons</button>
+      <button class="nav-item" data-panel="notes"><span class="num">05</span> Notes &amp; Bookmarks</button>
+      <button class="nav-item" data-panel="summary"><span class="num">06</span> Summary &amp; Stack</button>
+      <button class="nav-item" data-panel="resources"><span class="num">07</span> Resources &amp; Prompts</button>
+    </nav>
+    <div class="sidebar-foot">
+      <div class="overall-progress">
+        <div class="lbl"><span>Workflow progress</span><span id="progressPct">0%</span></div>
+        <div class="pbar"><div id="progressBar" style="width:0%"></div></div>
+      </div>
+      <button class="mini-btn" id="themeToggle">☾ Dark mode</button>
+      <button class="mini-btn" id="printBtn">🖨 Print guide</button>
+      <button class="mini-btn" id="resetBtn">↺ Reset progress</button>
+    </div>
+  </aside>
+
+  <main class="main">
+
+    <!-- ===================== OVERVIEW ===================== -->
+    <section class="panel active" id="p-overview">
+      <div class="page-head">
+        <div class="eyebrow">Workflow / Overview</div>
+        <div class="page-title">Building a REST/GraphQL API from scratch</div>
+        <div class="page-desc">An end-to-end map from first requirement to a monitored, deployed API — nine stages, each with the specific AI tools, prompts, and pitfalls for a Python (FastAPI or Django) build.</div>
+      </div>
+
+      <div class="hero">
+        <div class="topology">
+          <div class="tag">Target topology — what you're building toward</div>
+          <h2>A typed, documented, authenticated API</h2>
+          <div class="route-map">
+            <div class="route-node"><span class="method">CLIENT</span><span class="path">Web / Mobile</span></div>
+            <span class="route-arrow">→</span>
+            <div class="route-node"><span class="method">POST</span><span class="path">/auth/token</span></div>
+            <span class="route-arrow">→</span>
+            <div class="route-node"><span class="method">GET</span><span class="path">/v1/resource</span></div>
+            <span class="route-arrow">→</span>
+            <div class="route-node"><span class="method">DB</span><span class="path">Postgres</span></div>
+            <span class="route-arrow">→</span>
+            <div class="route-node"><span class="method">DOCS</span><span class="path">/docs (OpenAPI)</span></div>
+          </div>
+          <div class="stat-block">
+            <div class="item"><b>9</b><span>Stages</span></div>
+            <div class="item"><b>~55–75h</b><span>Solo build estimate</span></div>
+            <div class="item"><b>2</b><span>Framework paths</span></div>
+            <div class="item"><b id="totalTasksStat">0</b><span>Total tasks</span></div>
+          </div>
+        </div>
+        <div class="stack-card">
+          <div class="tag">Recommended stack for this path</div>
+          <h3 style="font-family:var(--serif); font-size:18px;">Python · FastAPI-first, Django as the fallback</h3>
+          <div class="stack-pill-row">
+            <span class="pill signal">FastAPI</span><span class="pill signal">Pydantic v2</span><span class="pill signal">SQLAlchemy / SQLModel</span>
+            <span class="pill">PostgreSQL</span><span class="pill">Alembic</span><span class="pill route">Docker</span>
+            <span class="pill">Pytest</span><span class="pill route">GitHub Actions</span>
+          </div>
+          <p style="font-size:11.5px; color:var(--text-dim); margin-top:12px; line-height:1.6;">FastAPI is the default recommendation for a new API-from-scratch build: async-native, automatic OpenAPI docs, and Pydantic validation reduce boilerplate that AI tools would otherwise need to generate and you'd need to review. See the decision tree if your project has admin-panel or ORM-heavy needs that favor Django.</p>
+        </div>
+      </div>
+
+      <div class="card" style="margin-bottom:16px;">
+        <h3>The nine stages</h3>
+        <div class="sub">Click any stage to jump into its full detail in the Workflow Pipeline tab</div>
+        <div class="pipeline" id="overviewPipeline"></div>
+      </div>
+
+      <div class="grid g3">
+        <div class="card"><h3>Why this order</h3><div class="sub">Sequence matters</div><p style="font-size:12.5px; color:var(--text-dim); line-height:1.6;">Design-before-code prevents rebuilding endpoints after the data model shifts. Security and testing are woven in before deployment, not bolted on after — retrofitting auth into a shipped API is where most rebuilds happen.</p></div>
+        <div class="card"><h3>Where AI helps most</h3><div class="sub">Highest-leverage stages</div><p style="font-size:12.5px; color:var(--text-dim); line-height:1.6;">Schema design, boilerplate CRUD generation, test-case generation, and documentation are where AI tools save the most hours. Architecture decisions and security review still need your judgment.</p></div>
+        <div class="card"><h3>Where to slow down</h3><div class="sub">Don't let AI drive here</div><p style="font-size:12.5px; color:var(--text-dim); line-height:1.6;">Authentication design, database schema decisions, and anything touching production secrets deserve a human-reviewed second pass, even after AI-assisted generation.</p></div>
+      </div>
+    </section>
+
+    <!-- ===================== DECISION TREE ===================== -->
+    <section class="panel" id="p-decision">
+      <div class="page-head">
+        <div class="eyebrow">Workflow / 02</div>
+        <div class="page-title">Framework decision tree</div>
+        <div class="page-desc">Answer three questions to get a specific framework recommendation, reasoned against your actual project shape rather than a generic "FastAPI vs Django" take.</div>
+      </div>
+      <div id="dtQuestions"></div>
+      <div class="dt-result" id="dtResult" style="display:none;"></div>
+    </section>
+
+    <!-- ===================== PIPELINE / STAGES ===================== -->
+    <section class="panel" id="p-pipeline">
+      <div class="page-head">
+        <div class="eyebrow">Workflow / 03</div>
+        <div class="page-title">Workflow pipeline</div>
+        <div class="page-desc">Nine stages, planning to monitoring. Check off tasks as you go — progress is saved and reflected in the sidebar.</div>
+      </div>
+      <div class="pipeline" id="mainPipeline"></div>
+      <div class="stage-detail" id="stageDetail"></div>
+    </section>
+
+    <!-- ===================== COMPARE ===================== -->
+    <section class="panel" id="p-compare">
+      <div class="page-head">
+        <div class="eyebrow">Workflow / 04</div>
+        <div class="page-title">Tool &amp; framework comparisons</div>
+        <div class="page-desc">Side-by-side reference for the recurring choices in this build.</div>
+      </div>
+
+      <div class="card" style="margin-bottom:18px;">
+        <h3>FastAPI vs Django (REST Framework) vs Flask</h3>
+        <div class="sub">For a new API-from-scratch project</div>
+        <table class="cmp">
+          <tr><th>Criteria</th><th>FastAPI</th><th>Django + DRF</th><th>Flask</th></tr>
+          <tr><td>Async support</td><td class="hl">Native, first-class</td><td>Partial (Django 4.1+)</td><td>Requires extensions</td></tr>
+          <tr><td>Auto API docs</td><td class="hl">Built-in (OpenAPI/Swagger)</td><td>Via DRF add-ons</td><td>Via extensions</td></tr>
+          <tr><td>Data validation</td><td class="hl">Pydantic, type-hint driven</td><td>DRF serializers</td><td>Manual / extensions</td></tr>
+          <tr><td>Admin panel</td><td>None built-in</td><td class="hl">Excellent, built-in</td><td>None built-in</td></tr>
+          <tr><td>ORM maturity</td><td>SQLAlchemy (bring your own)</td><td class="hl">Django ORM, very mature</td><td>Bring your own</td></tr>
+          <tr><td>Learning curve</td><td class="hl">Gentle, Pythonic</td><td>Moderate — "batteries included"</td><td class="hl">Gentle, minimal</td></tr>
+          <tr><td>Best fit</td><td>Greenfield APIs, microservices, ML-serving</td><td>Content-heavy apps needing admin/CMS</td><td>Small services, prototypes</td></tr>
+        </table>
+      </div>
+
+      <div class="grid g2">
+        <div class="card">
+          <h3>AI code assistants for this build</h3>
+          <div class="sub">Best fit by task type</div>
+          <table class="cmp">
+            <tr><th>Tool</th><th>Strongest for</th></tr>
+            <tr><td class="hl">Claude (Code / Chat)</td><td>Architecture reasoning, schema design, security review, multi-file refactors</td></tr>
+            <tr><td>GitHub Copilot</td><td>Inline autocomplete while writing route handlers</td></tr>
+            <tr><td>Cursor</td><td>Full-repo context edits, fast iteration in-editor</td></tr>
+            <tr><td>Postman AI / Hoppscotch</td><td>Generating and testing request collections</td></tr>
+          </table>
+        </div>
+        <div class="card">
+          <h3>REST vs GraphQL — quick take</h3>
+          <div class="sub">If you're still deciding the API style</div>
+          <table class="cmp">
+            <tr><th></th><th>REST</th><th>GraphQL</th></tr>
+            <tr><td>Best when</td><td class="hl">Resources map cleanly to endpoints</td><td>Clients need flexible, nested queries</td></tr>
+            <tr><td>Caching</td><td class="hl">Simple, HTTP-native</td><td>Needs extra tooling</td></tr>
+            <tr><td>Tooling maturity (Python)</td><td class="hl">FastAPI/DRF — very mature</td><td>Strawberry / Ariadne — solid, smaller ecosystem</td></tr>
+            <tr><td>Recommended default</td><td class="hl">Start here unless you know you need GraphQL</td><td>Add later if clients need it</td></tr>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===================== NOTES & BOOKMARKS ===================== -->
+    <section class="panel" id="p-notes">
+      <div class="page-head">
+        <div class="eyebrow">Workflow / 05</div>
+        <div class="page-title">Notes &amp; bookmarks</div>
+        <div class="page-desc">Star any stage from the pipeline to bookmark it here. Freeform notes are saved locally and persist between sessions.</div>
+      </div>
+      <div class="grid g2">
+        <div class="card">
+          <h3>Bookmarked stages</h3>
+          <div class="sub">Starred from the workflow pipeline</div>
+          <div id="bookmarkList"></div>
+        </div>
+        <div class="card">
+          <h3>Freeform notes</h3>
+          <div class="sub">Decisions, blockers, things to revisit</div>
+          <textarea class="notes-area" id="freeNotes" placeholder="e.g. Decided on FastAPI + SQLModel. Need to confirm hosting budget before Stage 8..."></textarea>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===================== SUMMARY & STACK ===================== -->
+    <section class="panel" id="p-summary">
+      <div class="page-head">
+        <div class="eyebrow">Workflow / 06</div>
+        <div class="page-title">Workflow summary &amp; recommended stack</div>
+        <div class="page-desc">The full build, condensed.</div>
+      </div>
+
+      <div class="card" style="margin-bottom:18px;">
+        <h3>Workflow summary</h3>
+        <p style="font-size:13px; color:var(--text-dim); line-height:1.7;">This workflow takes a REST/GraphQL API from an unwritten requirement to a deployed, monitored service in nine stages: planning, schema/API design, project setup, core development, authentication &amp; security, testing, documentation, deployment, and monitoring. AI tools are heaviest-leverage during design, boilerplate generation, test-writing, and documentation — and lightest-touch during architecture and security decisions, where your review should lead. Budget roughly 55–75 hours solo for a mid-sized API (10–20 endpoints, one primary resource domain, JWT auth, Postgres).</p>
+      </div>
+
+      <div class="card" style="margin-bottom:18px;">
+        <h3>Recommended AI stack for this workflow</h3>
+        <div class="stack-pill-row">
+          <span class="pill signal">Claude — architecture, schema, security review, docs</span>
+          <span class="pill">GitHub Copilot — inline completion</span>
+          <span class="pill">Cursor — repo-wide edits</span>
+          <span class="pill route">Postman AI — request testing</span>
+          <span class="pill">Swagger/OpenAPI (auto-gen) — docs</span>
+        </div>
+      </div>
+
+      <div class="grid g2">
+        <div class="card">
+          <h3>Future automation opportunities</h3>
+          <ul class="list-clean outputs">
+            <li>CI pipeline that auto-runs Claude-generated test suites on every PR</li>
+            <li>AI-assisted changelog generation from merged PR descriptions</li>
+            <li>Auto-generated API client SDKs from the OpenAPI schema on each release</li>
+            <li>Scheduled AI review of dependency updates for breaking changes</li>
+            <li>Auto-drafted incident summaries from monitoring alerts</li>
+          </ul>
+        </div>
+        <div class="card">
+          <h3>Search keywords</h3>
+          <div class="stack-pill-row">
+            <span class="pill">"FastAPI project structure best practices"</span>
+            <span class="pill">"Pydantic v2 schema design"</span>
+            <span class="pill">"JWT vs session auth FastAPI"</span>
+            <span class="pill">"SQLModel vs SQLAlchemy 2.0"</span>
+            <span class="pill">"OpenAPI documentation generation"</span>
+            <span class="pill">"API rate limiting FastAPI"</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===================== RESOURCES ===================== -->
+    <section class="panel" id="p-resources">
+      <div class="page-head">
+        <div class="eyebrow">Workflow / 07</div>
+        <div class="page-title">Learning resources, communities &amp; prompts</div>
+        <div class="page-desc">Where to go deeper, and prompts to keep in your back pocket for this build.</div>
+      </div>
+
+      <div class="grid g2" style="margin-bottom:18px;">
+        <div class="card">
+          <h3>Learning resources</h3>
+          <ul class="list-clean">
+            <li>Official FastAPI documentation — the tutorial section doubles as a design reference</li>
+            <li>Django REST Framework official tutorial — if the decision tree pointed you there</li>
+            <li>"Designing Data-Intensive Applications" — for schema and data-modeling depth</li>
+            <li>OpenAPI Specification docs — for understanding what your auto-generated docs actually describe</li>
+            <li>Real Python's API-building article series</li>
+          </ul>
+        </div>
+        <div class="card">
+          <h3>Communities</h3>
+          <ul class="list-clean">
+            <li>r/FastAPI and r/django on Reddit</li>
+            <li>FastAPI Discord server</li>
+            <li>Django Forum (official)</li>
+            <li>Stack Overflow — [fastapi] / [django-rest-framework] tags</li>
+            <li>Dev.to backend-development tag</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>Additional AI prompts for this workflow</h3>
+        <div class="sub">Copy and adapt for your own project</div>
+        <div class="prompt-box"><code>Review this FastAPI route for security issues: missing auth checks, injection risk, and improper error handling that could leak internals. [paste route code]</code><button class="copy-btn" data-copy>Copy</button></div>
+        <div class="prompt-box"><code>Given this Pydantic model, generate edge-case test data: boundary values, invalid types, and missing-required-field cases. [paste model]</code><button class="copy-btn" data-copy>Copy</button></div>
+        <div class="prompt-box"><code>I'm choosing between REST and GraphQL for [describe your data shape and client needs]. Walk through the tradeoffs specific to this case, not generically.</code><button class="copy-btn" data-copy>Copy</button></div>
+        <div class="prompt-box"><code>Convert this OpenAPI schema into a plain-English changelog entry a non-technical stakeholder could understand. [paste schema diff]</code><button class="copy-btn" data-copy>Copy</button></div>
+      </div>
+
+      <div class="footer-note">AI Workflow Architect — all progress, notes, and bookmarks stay in your browser's local storage. Nothing is uploaded anywhere.</div>
+    </section>
+
+  </main>
+</div>
+
+<script>
+(function(){
+'use strict';
+
+/* ============ STAGE DATA ============ */
+const STAGES = [
+{
+  id:'planning', title:'Planning & Requirements', time:'4–6h',
+  objective:'Turn a vague idea into a concrete list of resources, actions, and constraints before any code is written.',
+  objectives:['Define the API\'s core resources and who consumes them','Decide REST vs GraphQL for this project','Set non-functional requirements (expected load, latency, uptime)','Scope v1 vs later phases'],
+  tasks:['List every resource the API will expose (users, orders, etc.)','Identify consumers: web app, mobile app, third parties?','Write user stories for the top 5 API actions','Decide authentication model needed (public, API key, OAuth)','Set a v1 scope boundary — what is explicitly out'],
+  tools:[
+    {name:'Claude', badge:'best', why:'Strong at turning a rough product idea into a structured resource/endpoint list, and pressure-testing scope for what belongs in v1 vs later.'},
+    {name:'Notion AI', badge:'alt', why:'Useful if requirements docs already live in Notion and need AI-assisted structuring alongside the rest of the team\'s docs.'},
+  ],
+  prompts:[
+    'I\'m building an API for [describe product]. Help me list the core resources, their relationships, and the top 10 actions clients will need.',
+    'Given these user stories [paste], suggest what should be explicit v1 scope vs deferred to v2, and why.'
+  ],
+  practices:['Write requirements as user actions, not database tables — the schema comes later','Get non-functional requirements (expected traffic, latency) in writing even if rough','Explicitly list what\'s out of scope for v1'],
+  mistakes:['Jumping straight to schema design before agreeing on resources','Skipping auth-model decisions until security stage — it affects the whole design','Scoping v1 too broad, delaying any shippable milestone'],
+  outputs:['A resource list with relationships','5–10 core user stories','A written v1 scope boundary','Auth model decision (draft)'],
+  tips:'Timebox this to a single session — planning tends to expand to fill available time. A rough resource list beats a perfect one that takes a week.'
+},
+{
+  id:'design', title:'API Design & Data Modeling', time:'6–9h',
+  objective:'Design the schema, endpoints, and contracts before writing implementation code.',
+  objectives:['Model entities and relationships','Design the endpoint contract (paths, methods, request/response shapes)','Decide versioning strategy','Draft the OpenAPI/GraphQL schema skeleton'],
+  tasks:['Draw an ER diagram of core entities and relationships','Define each endpoint: method, path, request body, response shape','Decide URL versioning (e.g. /v1/) or header-based versioning','Draft Pydantic/serializer schemas for each resource','Review the design against the user stories from Stage 1'],
+  tools:[
+    {name:'Claude', badge:'best', why:'Generates a full first-pass schema and endpoint contract from plain-English requirements, and can reason about normalization tradeoffs and relationship design in the same conversation.'},
+    {name:'dbdiagram.io / drawSQL', badge:'alt', why:'Purpose-built for visual ER diagrams once entities are decided — good complement, not a replacement for the reasoning step.'},
+    {name:'Swagger Editor', badge:'alt', why:'Write and validate the OpenAPI spec directly if you prefer spec-first design over code-first.'}
+  ],
+  prompts:[
+    'Here are my resources and user stories: [paste]. Design a normalized data model with relationships, and flag any many-to-many cases that need a join table.',
+    'Generate a REST endpoint contract (method, path, request/response JSON) for a [resource] with standard CRUD plus [custom action].',
+    'Review this schema for normalization issues or fields that will cause problems at scale: [paste schema]'
+  ],
+  practices:['Design the contract before the implementation — endpoints are a promise to your clients','Use consistent, plural resource naming (/users, not /user)','Version from day one, even if it\'s just /v1/'],
+  mistakes:['Designing the database schema and API contract as the same thing — they often diverge','Skipping pagination design until the resource list is already huge in production','Inconsistent naming between endpoints (mixing camelCase and snake_case)'],
+  outputs:['ER diagram of entities and relationships','Full endpoint list with request/response shapes','Draft Pydantic/serializer models','Versioning decision'],
+  tips:'Have the AI generate two schema variants (normalized vs slightly denormalized for read performance) and compare — this catches design issues before they\'re expensive to fix.'
+},
+{
+  id:'setup', title:'Environment & Project Setup', time:'3–5h',
+  objective:'Get a clean, reproducible project scaffold running before business logic is added.',
+  objectives:['Initialize the project with the chosen framework','Set up dependency management and virtual environment','Configure environment variables and settings','Set up the database connection and migrations tool'],
+  tasks:['Initialize repo, virtual environment, and dependency file (pyproject.toml/requirements.txt)','Scaffold FastAPI/Django project structure','Set up .env handling and settings management','Connect to PostgreSQL locally (Docker recommended)','Initialize Alembic (FastAPI) or Django migrations','Set up pre-commit hooks (linting, formatting)'],
+  tools:[
+    {name:'Claude', badge:'best', why:'Generates a sensible project folder structure for FastAPI (routers/services/models/schemas split) matched to your project\'s actual size, avoiding both over- and under-engineering.'},
+    {name:'Docker + Docker Compose', badge:'alt', why:'Not AI, but essential here — reproducible Postgres + app environment from day one.'},
+    {name:'GitHub Copilot', badge:'alt', why:'Fast for repetitive boilerplate once the structure is decided (config classes, Dockerfile variants).'}
+  ],
+  prompts:[
+    'Suggest a FastAPI project folder structure for a mid-sized API (15-20 endpoints, 4 resource domains) using routers, services, and schemas separation.',
+    'Write a docker-compose.yml for a FastAPI app with a Postgres database, including healthchecks and a named volume.',
+    'Set up environment-based settings management using Pydantic Settings for dev/staging/prod configs.'
+  ],
+  practices:['Use Docker Compose from the start so the dev environment matches deployment','Keep secrets out of the repo — .env.example checked in, .env gitignored','Set up linting/formatting (ruff, black) before the codebase grows'],
+  mistakes:['Hardcoding database URLs or secrets directly in code','Skipping migrations tooling and hand-editing the database schema','Over-engineering the folder structure for a 5-endpoint API'],
+  outputs:['Running local dev environment','docker-compose.yml','Base project structure with config management','First migration applied'],
+  tips:'Ask AI to scaffold the structure matched to your actual endpoint count from Stage 2 — a 60-endpoint API and a 12-endpoint API shouldn\'t use the same folder depth.'
+},
+{
+  id:'core', title:'Core Development', time:'16–24h',
+  objective:'Implement models, routes, and business logic against the design from Stage 2.',
+  objectives:['Implement database models','Build CRUD endpoints for each resource','Implement business logic and validation','Wire up dependency injection (DB sessions, services)'],
+  tasks:['Implement SQLAlchemy/Django models from the ER diagram','Build Pydantic schemas for request/response validation','Implement CRUD routes/viewsets per resource','Add pagination, filtering, and sorting to list endpoints','Implement any custom business logic beyond CRUD','Add structured error handling and consistent error responses'],
+  tools:[
+    {name:'Claude', badge:'best', why:'Best for multi-file, context-aware generation — implementing a full resource (model + schema + route + service) consistently with the rest of the codebase\'s patterns, not just one file in isolation.'},
+    {name:'GitHub Copilot', badge:'alt', why:'Strong for fast inline completion once a pattern is established — repeating the same CRUD shape across resources.'},
+    {name:'Cursor', badge:'alt', why:'Good when a change needs to ripple across many files at once (e.g. adding a field to a widely-used model).'}
+  ],
+  prompts:[
+    'Implement a full CRUD route set for a [resource] following this existing pattern: [paste an existing resource\'s model/schema/route as reference].',
+    'Add cursor-based pagination to this list endpoint: [paste route]. Keep the response shape consistent with my other paginated endpoints: [paste example].',
+    'Review this business logic for edge cases I might have missed: [paste function].'
+  ],
+  practices:['Establish one resource\'s pattern fully (model/schema/route/service) before replicating it across others','Keep business logic out of route handlers — push it into a service layer','Return consistent error response shapes across all endpoints'],
+  mistakes:['Letting AI generate each resource independently without referencing the established pattern, causing drift','Putting validation logic in route handlers instead of schemas','Skipping input sanitization on write endpoints'],
+  outputs:['All models implemented and migrated','Full CRUD route set per resource','Consistent error handling','Working pagination/filtering'],
+  tips:'Paste your first fully-built resource as a reference example every time you ask AI to build the next one — consistency compounds faster than speed here.'
+},
+{
+  id:'auth', title:'Authentication & Security', time:'6–10h',
+  objective:'Lock the API down before it has anything worth stealing.',
+  objectives:['Implement authentication (JWT/OAuth/session)','Implement authorization (role/permission checks)','Add rate limiting and input validation hardening','Run a security review pass'],
+  tasks:['Implement token-based auth (JWT via OAuth2PasswordBearer for FastAPI, or DRF token/JWT auth)','Add role-based or scope-based permission checks per route','Add rate limiting on auth and write endpoints','Enable CORS with an explicit allow-list, not wildcard','Run a dependency vulnerability scan','Have AI review routes for auth bypass and injection risks'],
+  tools:[
+    {name:'Claude', badge:'best', why:'Most reliable for a structured security review pass — checking each route systematically for missing auth checks, injection risk, and improper error responses that leak internals.'},
+    {name:'OWASP ZAP', badge:'alt', why:'Automated scanning to complement, not replace, the AI-assisted manual review.'},
+    {name:'Snyk / pip-audit', badge:'alt', why:'Dependency vulnerability scanning — catches known CVEs in your requirements.'}
+  ],
+  prompts:[
+    'Review every route in this file for missing authentication or authorization checks: [paste routes file].',
+    'Implement JWT authentication for FastAPI using OAuth2PasswordBearer, including token refresh, following current best practices.',
+    'Check this CORS and rate-limiting configuration for gaps: [paste config].'
+  ],
+  practices:['Never trust client-supplied IDs for authorization — always check the resource belongs to the requester','Set explicit CORS origins, never wildcard in production','Rate-limit auth endpoints separately and more strictly than general endpoints'],
+  mistakes:['Wildcard CORS (allow_origins=["*"]) left in from local development','Checking authentication but forgetting authorization (is this user allowed to touch this specific record)','Storing secrets or JWT signing keys in source control'],
+  outputs:['Working auth flow (login, token issuance, refresh)','Permission checks on every protected route','Rate limiting on sensitive endpoints','Security review notes with issues resolved'],
+  tips:'Ask AI to review routes one file at a time with the specific question "what could a malicious authenticated user do here that they shouldn\'t" — narrower prompts catch more than a generic "review for security" pass.'
+},
+{
+  id:'testing', title:'Testing & Validation', time:'8–12h',
+  objective:'Prove the API behaves correctly, including in the cases you didn\'t think of.',
+  objectives:['Write unit tests for business logic','Write integration tests for endpoints','Cover edge cases and failure modes','Set a coverage target and measure against it'],
+  tasks:['Set up pytest with a test database/fixtures','Write unit tests for service-layer logic','Write integration tests hitting each endpoint (happy path + failure paths)','Generate edge-case test data (boundary values, invalid types)','Add contract tests validating responses match the OpenAPI schema','Measure and review coverage'],
+  tools:[
+    {name:'Claude', badge:'best', why:'Generates thorough edge-case test scenarios from a schema or function signature — including cases a human often skips, like empty-list responses or boundary values.'},
+    {name:'Pytest + pytest-cov', badge:'alt', why:'The actual test runner and coverage tool — AI writes the tests, this runs and measures them.'},
+    {name:'Postman/Newman', badge:'alt', why:'Good for AI-generated request collections used as smoke tests against a running instance.'}
+  ],
+  prompts:[
+    'Generate pytest test cases for this endpoint covering: happy path, missing required fields, invalid types, unauthorized access, and not-found. [paste route]',
+    'Given this Pydantic model, list boundary and edge-case values I should test for each field.',
+    'Review my test suite for this module and tell me what scenarios are missing: [paste test file].'
+  ],
+  practices:['Test failure paths as thoroughly as success paths — 401s, 404s, 422s','Use fixtures/factories for test data, not hand-written duplication','Run the full suite before every deploy, not just before merging'],
+  mistakes:['Only testing the happy path','Testing implementation details instead of behavior, making tests brittle to refactors','Letting test coverage numbers become the goal instead of actual confidence'],
+  outputs:['Test suite covering all endpoints','Edge-case coverage for validation logic','Coverage report','CI-runnable test command'],
+  tips:'Ask AI specifically for "what would break this" scenarios per endpoint rather than generic tests — it surfaces genuinely useful edge cases instead of restating the obvious happy path.'
+},
+{
+  id:'docs', title:'Documentation', time:'3–5h',
+  objective:'Make the API usable by someone who has never seen the codebase.',
+  objectives:['Ensure auto-generated docs (OpenAPI/Swagger) are complete and accurate','Write a README with setup and usage instructions','Document authentication flow for API consumers','Add example requests for each endpoint'],
+  tasks:['Add descriptions and examples to all Pydantic models/serializers so they show up in Swagger UI','Write a project README: setup, environment variables, running locally, running tests','Document the auth flow with a worked example (get token → use token)','Add a CHANGELOG for versioned releases'],
+  tools:[
+    {name:'Claude', badge:'best', why:'Best for turning terse code and schemas into clear prose documentation, and for writing example requests that actually reflect the current schema rather than stale copy-paste examples.'},
+    {name:'FastAPI auto-docs (/docs)', badge:'alt', why:'Not AI, but the foundation — AI-written descriptions and examples populate directly into this interactive UI.'},
+    {name:'Mintlify / Docusaurus', badge:'alt', why:'If docs need to live outside the auto-generated Swagger UI, for a polished external developer portal.'}
+  ],
+  prompts:[
+    'Write clear docstrings and Field descriptions for this Pydantic model so they render well in Swagger UI: [paste model].',
+    'Write a README for this FastAPI project covering setup, environment variables, running locally with Docker, and running tests.',
+    'Generate a worked example of the full auth flow (register, login, use token) as a documentation section.'
+  ],
+  practices:['Keep docs next to the code they describe (docstrings, Field descriptions) so they can\'t drift silently','Include at least one full worked example per major workflow, not just field-by-field descriptions','Regenerate docs as part of the release process, not as an afterthought'],
+  mistakes:['Writing documentation once and never updating it as endpoints change','Documenting only the happy path, leaving error responses unexplained','Assuming auto-generated schema docs are enough without any prose context'],
+  outputs:['Complete OpenAPI docs with examples','Project README','Auth flow documentation','CHANGELOG'],
+  tips:'Have AI regenerate the README\'s setup section directly from your actual docker-compose.yml and .env.example — it stays accurate because it\'s derived from the real config, not remembered separately.'
+},
+{
+  id:'deploy', title:'Deployment & DevOps', time:'6–10h',
+  objective:'Ship the API to a real environment with a repeatable, safe deployment process.',
+  objectives:['Containerize the application','Set up CI/CD for automated testing and deployment','Choose and configure hosting','Set up staging and production environment separation'],
+  tasks:['Write a production Dockerfile (multi-stage build)','Set up GitHub Actions (or similar) for lint/test/build on every PR','Configure environment-specific secrets in the hosting platform','Choose hosting (Railway/Render/Fly.io for simplicity, AWS/GCP for scale)','Set up a staging environment mirroring production','Configure a deployment pipeline (build → test → deploy on merge to main)'],
+  tools:[
+    {name:'Claude', badge:'best', why:'Generates and debugs CI/CD YAML and Dockerfiles quickly, and can reason about the tradeoffs between hosting options for your specific traffic/budget constraints rather than generic advice.'},
+    {name:'GitHub Actions', badge:'alt', why:'The actual CI/CD runner — AI drafts the workflow file, this executes it.'},
+    {name:'Railway / Render / Fly.io', badge:'alt', why:'Lower-friction hosting for a solo/small-team API build than managing raw AWS from day one.'}
+  ],
+  prompts:[
+    'Write a multi-stage production Dockerfile for this FastAPI app that minimizes final image size. [paste requirements.txt or pyproject.toml]',
+    'Create a GitHub Actions workflow that runs lint, tests, and builds a Docker image on every PR, and deploys to [platform] on merge to main.',
+    'I have [X requests/day expected, $Y/month budget]. Compare hosting options for this FastAPI + Postgres app given those constraints.'
+  ],
+  practices:['Never deploy directly to production without a staging pass first','Keep production secrets in the hosting platform\'s secret manager, never in the repo','Make rollback a one-command operation, not a manual scramble'],
+  mistakes:['Skipping staging and testing changes directly in production','Baking secrets into the Docker image','No health-check endpoint, so the platform can\'t detect a crashed instance'],
+  outputs:['Production Dockerfile','CI/CD pipeline (lint, test, build, deploy)','Live staging and production environments','Documented rollback process'],
+  tips:'Ask AI to write the CI/CD pipeline stage-by-stage (lint job, test job, build job, deploy job) rather than one monolithic file — it\'s far easier to debug a failing stage independently.'
+},
+{
+  id:'monitor', title:'Monitoring & Iteration', time:'3–6h ongoing',
+  objective:'Know when something breaks before your users tell you, and keep improving after launch.',
+  objectives:['Set up error tracking and logging','Set up uptime and performance monitoring','Establish a feedback loop for API consumers','Plan the next iteration\'s scope'],
+  tasks:['Integrate error tracking (Sentry or similar)','Set up structured logging with request IDs','Add uptime monitoring with alerting','Track key metrics: response times, error rates, endpoint usage','Collect API consumer feedback (internal or external)','Prioritize the next iteration\'s backlog'],
+  tools:[
+    {name:'Claude', badge:'best', why:'Good for turning raw logs or error traces into a plain-English root-cause summary quickly, and for triaging which recurring errors are worth fixing first.'},
+    {name:'Sentry', badge:'alt', why:'The actual error-tracking service — pairs well with AI-assisted triage of what it surfaces.'},
+    {name:'Grafana + Prometheus', badge:'alt', why:'For deeper performance metrics once traffic justifies the setup overhead.'}
+  ],
+  prompts:[
+    'Here are the last 20 error traces from Sentry: [paste]. Group them by likely root cause and rank by how many users they affect.',
+    'Given these endpoint response-time metrics, which endpoints look like they need query optimization? [paste metrics]',
+    'Draft a lightweight incident summary from this alert and log excerpt: [paste].'
+  ],
+  practices:['Alert on symptoms users would notice (error rate, latency), not just infrastructure metrics','Review error trends weekly, not just when something is actively on fire','Feed real usage data back into what gets prioritized next'],
+  mistakes:['Setting up monitoring but never actually looking at the dashboards','Alert fatigue from too many low-signal alerts, causing real ones to get ignored','Treating v1 as "done" instead of the start of an iteration loop'],
+  outputs:['Error tracking integrated and alerting','Uptime monitoring with on-call alerting','A weekly review habit for metrics','A prioritized next-iteration backlog'],
+  tips:'Have AI summarize a week of errors into a single ranked list before your weekly review — turns a noisy dashboard into a 5-minute decision meeting.'
+}
+];
+
+/* ============ STATE ============ */
+const DEFAULT_STATE = {theme:'dark', done:{}, bookmarks:[], notes:''};
+let state = load();
+function load(){
+  try{ const raw = localStorage.getItem('workflow_architect_v1'); if(raw) return Object.assign({}, DEFAULT_STATE, JSON.parse(raw)); }catch(e){}
+  return JSON.parse(JSON.stringify(DEFAULT_STATE));
+}
+function save(){ localStorage.setItem('workflow_architect_v1', JSON.stringify(state)); }
+
+let activeStageIdx = 0;
+let activeSubTab = 'objectives';
+
+/* ============ NAV ============ */
+document.querySelectorAll('.nav-item').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    document.querySelectorAll('.nav-item').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    document.querySelectorAll('section.panel').forEach(p=>p.classList.remove('active'));
+    document.getElementById('p-'+btn.dataset.panel).classList.add('active');
+    if(btn.dataset.panel==='notes') renderNotesPanel();
+  });
+});
+
+/* ============ THEME / TOOLBAR ============ */
+const themeBtn = document.getElementById('themeToggle');
+function applyTheme(){
+  document.body.classList.toggle('light', state.theme==='light');
+  themeBtn.textContent = state.theme==='light' ? '☀ Light mode' : '☾ Dark mode';
+}
+themeBtn.addEventListener('click', ()=>{ state.theme = state.theme==='light'?'dark':'light'; save(); applyTheme(); });
+document.getElementById('printBtn').addEventListener('click', ()=>window.print());
+document.getElementById('resetBtn').addEventListener('click', ()=>{
+  if(confirm('Reset all progress, notes, and bookmarks?')){
+    state = JSON.parse(JSON.stringify(DEFAULT_STATE));
+    save(); applyTheme(); renderAll();
+  }
+});
+
+/* ============ PIPELINE RENDER (both overview mini + main) ============ */
+function stageProgress(stage){
+  const doneSet = state.done[stage.id] || [];
+  return stage.tasks.length ? Math.round((doneSet.length/stage.tasks.length)*100) : 0;
+}
+function renderPipeline(containerId, clickable){
+  const wrap = document.getElementById(containerId);
+  wrap.innerHTML = '';
+  STAGES.forEach((s, idx)=>{
+    const el = document.createElement('div');
+    const pct = stageProgress(s);
+    el.className = 'pipe-step' + (idx===activeStageIdx && containerId==='mainPipeline' ? ' active':'') + (pct===100 ? ' done':'');
+    el.innerHTML = `<div class="n">STAGE ${idx+1} · ${s.time}</div><div class="t">${s.title}</div>`;
+    el.addEventListener('click', ()=>{
+      activeStageIdx = idx;
+      if(containerId==='overviewPipeline'){
+        document.querySelectorAll('.nav-item').forEach(b=>b.classList.remove('active'));
+        document.querySelector('.nav-item[data-panel="pipeline"]').classList.add('active');
+        document.querySelectorAll('section.panel').forEach(p=>p.classList.remove('active'));
+        document.getElementById('p-pipeline').classList.add('active');
+      }
+      activeSubTab = 'objectives';
+      renderPipeline('mainPipeline', true);
+      renderStageDetail();
+    });
+    wrap.appendChild(el);
+  });
+}
+
+/* ============ STAGE DETAIL ============ */
+const SUBTABS = [
+  ['objectives','Objectives & Tasks'],
+  ['tools','AI Tools'],
+  ['prompts','Prompts'],
+  ['practices','Best Practices'],
+  ['mistakes','Common Mistakes'],
+  ['outputs','Expected Outputs']
+];
+function renderStageDetail(){
+  const stage = STAGES[activeStageIdx];
+  const wrap = document.getElementById('stageDetail');
+  const pct = stageProgress(stage);
+  const isBookmarked = state.bookmarks.includes(stage.id);
+
+  wrap.innerHTML = `
+    <div class="stage-head">
+      <div>
+        <h2>Stage ${activeStageIdx+1} — ${stage.title}</h2>
+        <div class="stage-meta"><span>⏱ <b>${stage.time}</b></span><span>✓ ${pct}% tasks complete</span></div>
+      </div>
+      <div style="display:flex; gap:8px;">
+        <button class="mini-btn" id="bookmarkBtn">${isBookmarked ? '★ Bookmarked' : '☆ Bookmark'}</button>
+      </div>
+    </div>
+    <div class="stage-objective">${stage.objective}</div>
+    <div class="sub-tabs" id="subTabs"></div>
+    <div id="subPanels"></div>
+    <div class="stage-nav-btns">
+      <button class="btn ghost sm" id="prevStageBtn" ${activeStageIdx===0?'disabled':''}>← Previous stage</button>
+      <button class="btn sm" id="nextStageBtn" ${activeStageIdx===STAGES.length-1?'disabled':''}>Next stage →</button>
+    </div>
+  `;
+
+  const subTabsEl = document.getElementById('subTabs');
+  SUBTABS.forEach(([key,label])=>{
+    const b = document.createElement('button');
+    b.className = 'sub-tab' + (activeSubTab===key ? ' active':'');
+    b.textContent = label;
+    b.addEventListener('click', ()=>{ activeSubTab = key; renderStageDetail(); });
+    subTabsEl.appendChild(b);
+  });
+
+  const panelsEl = document.getElementById('subPanels');
+  panelsEl.innerHTML = '';
+
+  if(activeSubTab==='objectives'){
+    const p = document.createElement('div'); p.className='sub-panel active';
+    p.innerHTML = `
+      <h3 style="font-family:var(--serif); font-size:15px; margin-bottom:10px;">Objectives</h3>
+      <ul class="list-clean outputs" style="margin-bottom:18px;">${stage.objectives.map(o=>`<li>${o}</li>`).join('')}</ul>
+      <h3 style="font-family:var(--serif); font-size:15px; margin-bottom:10px;">Tasks</h3>
+      <div id="taskList"></div>
+    `;
+    panelsEl.appendChild(p);
+    const taskList = document.getElementById('taskList');
+    const doneSet = state.done[stage.id] || [];
+    stage.tasks.forEach((t,i)=>{
+      const row = document.createElement('label');
+      row.className = 'task-row';
+      const checked = doneSet.includes(i);
+      row.innerHTML = `<input type="checkbox" ${checked?'checked':''} data-i="${i}"><span class="${checked?'done':''}">${t}</span>`;
+      taskList.appendChild(row);
+    });
+    taskList.querySelectorAll('input[type=checkbox]').forEach(cb=>{
+      cb.addEventListener('change', ()=>{
+        const i = parseInt(cb.dataset.i);
+        const set = new Set(state.done[stage.id] || []);
+        if(cb.checked) set.add(i); else set.delete(i);
+        state.done[stage.id] = Array.from(set);
+        save();
+        cb.nextElementSibling.classList.toggle('done', cb.checked);
+        renderPipeline('mainPipeline', true);
+        renderPipeline('overviewPipeline', false);
+        updateOverallProgress();
+      });
+    });
+  }
+
+  if(activeSubTab==='tools'){
+    const p = document.createElement('div'); p.className='sub-panel active';
+    p.innerHTML = stage.tools.map(t=>`
+      <div class="tool-card">
+        <div class="row1"><span class="name">${t.name}</span><span class="badge ${t.badge}">${t.badge==='best'?'Recommended':'Alternative'}</span></div>
+        <div class="why">${t.why}</div>
+      </div>
+    `).join('');
+    panelsEl.appendChild(p);
+  }
+
+  if(activeSubTab==='prompts'){
+    const p = document.createElement('div'); p.className='sub-panel active';
+    p.innerHTML = `<div class="sub" style="margin-bottom:12px;">Copy-ready prompts for this stage</div>` +
+      stage.prompts.map(pr=>`<div class="prompt-box"><code>${escapeHtml(pr)}</code><button class="copy-btn" data-copy>Copy</button></div>`).join('') +
+      `<div class="insight-tip" style="margin-top:14px; font-size:12.5px; color:var(--text-dim);">💡 ${stage.tips}</div>`;
+    panelsEl.appendChild(p);
+  }
+
+  if(activeSubTab==='practices'){
+    const p = document.createElement('div'); p.className='sub-panel active';
+    p.innerHTML = `<ul class="list-clean practices">${stage.practices.map(x=>`<li>${x}</li>`).join('')}</ul>`;
+    panelsEl.appendChild(p);
+  }
+
+  if(activeSubTab==='mistakes'){
+    const p = document.createElement('div'); p.className='sub-panel active';
+    p.innerHTML = `<ul class="list-clean mistakes">${stage.mistakes.map(x=>`<li>${x}</li>`).join('')}</ul>`;
+    panelsEl.appendChild(p);
+  }
+
+  if(activeSubTab==='outputs'){
+    const p = document.createElement('div'); p.className='sub-panel active';
+    p.innerHTML = `<ul class="list-clean outputs">${stage.outputs.map(x=>`<li>${x}</li>`).join('')}</ul>`;
+    panelsEl.appendChild(p);
+  }
+
+  document.getElementById('bookmarkBtn').addEventListener('click', ()=>{
+    const i = state.bookmarks.indexOf(stage.id);
+    if(i>=0) state.bookmarks.splice(i,1); else state.bookmarks.push(stage.id);
+    save(); renderStageDetail(); renderBookmarks();
+  });
+  document.getElementById('prevStageBtn').addEventListener('click', ()=>{
+    if(activeStageIdx>0){ activeStageIdx--; activeSubTab='objectives'; renderPipeline('mainPipeline',true); renderStageDetail(); window.scrollTo({top:0,behavior:'smooth'}); }
+  });
+  document.getElementById('nextStageBtn').addEventListener('click', ()=>{
+    if(activeStageIdx<STAGES.length-1){ activeStageIdx++; activeSubTab='objectives'; renderPipeline('mainPipeline',true); renderStageDetail(); window.scrollTo({top:0,behavior:'smooth'}); }
+  });
+
+  panelsEl.querySelectorAll('[data-copy]').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      const text = btn.previousElementSibling.textContent;
+      navigator.clipboard.writeText(text).then(()=>{
+        const orig = btn.textContent; btn.textContent='Copied ✓';
+        setTimeout(()=>btn.textContent=orig, 1400);
+      }).catch(()=>{});
+    });
+  });
+}
+
+function escapeHtml(s){ return String(s).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+
+/* ============ OVERALL PROGRESS ============ */
+function updateOverallProgress(){
+  let totalTasks = 0, doneTasks = 0;
+  STAGES.forEach(s=>{
+    totalTasks += s.tasks.length;
+    doneTasks += (state.done[s.id]||[]).length;
+  });
+  const pct = totalTasks ? Math.round((doneTasks/totalTasks)*100) : 0;
+  document.getElementById('progressPct').textContent = pct+'%';
+  document.getElementById('progressBar').style.width = pct+'%';
+  document.getElementById('totalTasksStat').textContent = totalTasks;
+}
+
+/* ============ BOOKMARKS / NOTES PANEL ============ */
+function renderBookmarks(){
+  const wrap = document.getElementById('bookmarkList');
+  wrap.innerHTML = '';
+  if(state.bookmarks.length===0){ wrap.innerHTML = '<div class="sub" style="padding:10px 0;">No bookmarks yet — star a stage from the pipeline detail view.</div>'; return; }
+  state.bookmarks.forEach(id=>{
+    const stage = STAGES.find(s=>s.id===id);
+    if(!stage) return;
+    const idx = STAGES.indexOf(stage);
+    const row = document.createElement('div');
+    row.className = 'bookmark-item';
+    row.innerHTML = `<span><span class="bookmark-star">★</span> ${stage.title}</span><button data-remove="${id}">✕</button>`;
+    row.querySelector('span:first-child').style.cursor='pointer';
+    row.querySelector('span:first-child').addEventListener('click', ()=>{
+      document.querySelectorAll('.nav-item').forEach(b=>b.classList.remove('active'));
+      document.querySelector('.nav-item[data-panel="pipeline"]').classList.add('active');
+      document.querySelectorAll('section.panel').forEach(p=>p.classList.remove('active'));
+      document.getElementById('p-pipeline').classList.add('active');
+      activeStageIdx = idx; activeSubTab='objectives';
+      renderPipeline('mainPipeline', true); renderStageDetail();
+    });
+    wrap.appendChild(row);
+  });
+  wrap.querySelectorAll('[data-remove]').forEach(b=>{
+    b.addEventListener('click', (e)=>{
+      e.stopPropagation();
+      state.bookmarks = state.bookmarks.filter(x=>x!==b.dataset.remove);
+      save(); renderBookmarks();
+    });
+  });
+}
+function renderNotesPanel(){
+  renderBookmarks();
+  document.getElementById('freeNotes').value = state.notes || '';
+}
+document.getElementById('freeNotes').addEventListener('input', (e)=>{
+  state.notes = e.target.value; save();
+});
+
+/* ============ DECISION TREE ============ */
+const DT_QUESTIONS = [
+  {q:'Does your project need a built-in admin panel for non-developers to manage data?', opts:['Yes, admin panel is important','No, API-only is fine']},
+  {q:'Will clients need flexible, nested queries (pick exactly the fields they want)?', opts:['Yes, flexible querying matters','No, fixed response shapes are fine']},
+  {q:'Is async performance (high concurrency, long-lived connections) a priority?', opts:['Yes, async matters a lot','Not a major factor']}
+];
+let dtAnswers = [];
+function renderDecisionTree(){
+  const wrap = document.getElementById('dtQuestions');
+  wrap.innerHTML = '';
+  DT_QUESTIONS.forEach((dq, qi)=>{
+    const div = document.createElement('div');
+    div.className = 'dt-question';
+    div.innerHTML = `<h4>${qi+1}. ${dq.q}</h4><div class="dt-options">${dq.opts.map((o,oi)=>`<button class="dt-opt ${dtAnswers[qi]===oi?'chosen':''}" data-q="${qi}" data-o="${oi}">${o}</button>`).join('')}</div>`;
+    wrap.appendChild(div);
+  });
+  wrap.querySelectorAll('.dt-opt').forEach(b=>{
+    b.addEventListener('click', ()=>{
+      dtAnswers[parseInt(b.dataset.q)] = parseInt(b.dataset.o);
+      renderDecisionTree();
+      renderDecisionResult();
+    });
+  });
+}
+function renderDecisionResult(){
+  const resultEl = document.getElementById('dtResult');
+  if(dtAnswers.length < DT_QUESTIONS.length || dtAnswers.some(a=>a===undefined)){ resultEl.style.display='none'; return; }
+  const [needsAdmin, needsFlexQuery, needsAsync] = dtAnswers;
+  let framework, reason;
+  if(needsAdmin===0){
+    framework = 'Django + Django REST Framework';
+    reason = 'A built-in admin panel is one of Django\'s strongest advantages — building an equivalent in FastAPI would mean adding a separate admin tool. Use DRF for the API layer on top.';
+  } else if(needsFlexQuery===0){
+    framework = 'FastAPI + Strawberry (GraphQL)';
+    reason = 'Flexible, client-driven queries are GraphQL\'s core strength. FastAPI pairs cleanly with Strawberry for a typed, async-native GraphQL layer.';
+  } else if(needsAsync===0){
+    framework = 'FastAPI (REST)';
+    reason = 'Async performance is FastAPI\'s core strength — native async/await support without bolt-on extensions, plus automatic OpenAPI docs.';
+  } else {
+    framework = 'FastAPI (REST) — the default recommendation';
+    reason = 'With no strong pull toward an admin panel, flexible querying, or async as a priority, FastAPI\'s gentle learning curve and automatic documentation make it the lowest-friction choice for a new API.';
+  }
+  resultEl.style.display = 'block';
+  resultEl.innerHTML = `<div class="lbl">Recommended for your project</div><h3>${framework}</h3><p style="font-size:13px; color:var(--text-dim); line-height:1.6;">${reason}</p>`;
+}
+
+/* ============ INIT ============ */
+function renderAll(){
+  applyTheme();
+  renderPipeline('overviewPipeline', false);
+  renderPipeline('mainPipeline', true);
+  renderStageDetail();
+  updateOverallProgress();
+  renderDecisionTree();
+  renderDecisionResult();
+  renderNotesPanel();
+}
+renderAll();
+})();
+</script>
+</body>
+</html>
