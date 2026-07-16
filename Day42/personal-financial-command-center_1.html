@@ -1,0 +1,1313 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Ledger — Personal Financial Command Center</title>
+<style>
+:root{
+  --ink:#0F1417;
+  --ink-2:#161D21;
+  --ink-3:#1D262B;
+  --paper:#F6F3EC;
+  --paper-dim:#DAD5C7;
+  --text:#E9E5DC;
+  --text-dim:#9BA3A0;
+  --hair:#2B3439;
+  --amber:#E8A33D;
+  --amber-dim:#8A6428;
+  --rust:#C4573F;
+  --sage:#6FA98B;
+  --sage-dim:#3E5F4E;
+  --blue:#5B87A8;
+  --radius:10px;
+  --serif:'Ledger-Fraunces', Georgia, 'Times New Roman', serif;
+  --sans:'Ledger-Grotesk', -apple-system, 'Segoe UI', sans-serif;
+  --mono:'Ledger-Mono', 'Courier New', monospace;
+}
+@font-face{
+  font-family:'Ledger-Fraunces';
+  src:local('Fraunces'), local('Georgia');
+}
+*{box-sizing:border-box; margin:0; padding:0;}
+html{scroll-behavior:smooth;}
+body{
+  background:var(--ink);
+  color:var(--text);
+  font-family:var(--sans), sans-serif;
+  -webkit-font-smoothing:antialiased;
+  min-height:100vh;
+  transition:background .3s ease, color .3s ease;
+}
+body.light{
+  --ink:#F6F3EC;
+  --ink-2:#EDE9DD;
+  --ink-3:#E4DECE;
+  --text:#20272B;
+  --text-dim:#5C6660;
+  --hair:#CFC8B4;
+}
+::selection{background:var(--amber); color:var(--ink);}
+a{color:inherit;}
+button{font-family:inherit; cursor:pointer;}
+input, select{font-family:var(--mono); }
+
+/* ---- Layout shell ---- */
+.shell{display:flex; min-height:100vh;}
+.sidebar{
+  width:230px; flex-shrink:0;
+  background:var(--ink-2);
+  border-right:1px solid var(--hair);
+  position:sticky; top:0; height:100vh;
+  display:flex; flex-direction:column;
+  padding:22px 16px;
+  z-index:50;
+}
+.brand{
+  font-family:var(--serif); font-size:19px; font-weight:600;
+  letter-spacing:.2px; margin-bottom:2px; display:flex; align-items:baseline; gap:8px;
+}
+.brand small{font-family:var(--mono); font-size:10px; color:var(--amber); letter-spacing:1.5px; text-transform:uppercase;}
+.brand-sub{font-size:11px; color:var(--text-dim); margin-bottom:26px;}
+.nav{display:flex; flex-direction:column; gap:2px; flex:1; overflow-y:auto;}
+.nav-item{
+  display:flex; align-items:center; gap:10px;
+  padding:9px 10px; border-radius:7px; border:none; background:transparent; color:var(--text-dim);
+  font-size:13px; text-align:left; transition:all .15s ease; position:relative;
+}
+.nav-item .num{font-family:var(--mono); font-size:10px; opacity:.55; width:16px;}
+.nav-item:hover{background:var(--ink-3); color:var(--text);}
+.nav-item.active{background:var(--ink-3); color:var(--amber);}
+.nav-item.active .num{color:var(--amber); opacity:1;}
+.sidebar-foot{padding-top:14px; border-top:1px solid var(--hair); margin-top:10px; display:flex; flex-direction:column; gap:8px;}
+.mini-btn{
+  background:var(--ink-3); border:1px solid var(--hair); color:var(--text-dim);
+  font-size:11px; padding:8px 10px; border-radius:7px; display:flex; align-items:center; justify-content:space-between; gap:6px;
+}
+.mini-btn:hover{color:var(--text); border-color:var(--amber-dim);}
+
+.main{flex:1; min-width:0; padding:34px 40px 90px; max-width:1180px;}
+section.panel{display:none; animation:fadeIn .35s ease;}
+section.panel.active{display:block;}
+@keyframes fadeIn{from{opacity:0; transform:translateY(6px);} to{opacity:1; transform:translateY(0);}}
+
+.page-head{margin-bottom:26px;}
+.eyebrow{font-family:var(--mono); font-size:10.5px; letter-spacing:2px; text-transform:uppercase; color:var(--amber); margin-bottom:8px;}
+.page-title{font-family:var(--serif); font-size:32px; font-weight:600; letter-spacing:.2px;}
+.page-desc{color:var(--text-dim); font-size:13.5px; margin-top:6px; max-width:640px; line-height:1.55;}
+
+/* ---- Cards / grid ---- */
+.grid{display:grid; gap:16px;}
+.g2{grid-template-columns:1fr 1fr;}
+.g3{grid-template-columns:repeat(3,1fr);}
+.g4{grid-template-columns:repeat(4,1fr);}
+@media(max-width:900px){.g2,.g3,.g4{grid-template-columns:1fr;}}
+.card{
+  background:var(--ink-2); border:1px solid var(--hair); border-radius:var(--radius);
+  padding:20px;
+}
+.card h3{font-family:var(--serif); font-size:16px; font-weight:600; margin-bottom:4px;}
+.card .sub{font-size:11.5px; color:var(--text-dim); margin-bottom:14px;}
+.stat-card{padding:18px 20px;}
+.stat-label{font-family:var(--mono); font-size:10px; text-transform:uppercase; letter-spacing:1.2px; color:var(--text-dim); margin-bottom:10px; display:flex; justify-content:space-between; align-items:center;}
+.stat-value{font-family:var(--serif); font-size:28px; font-weight:600;}
+.stat-value.amber{color:var(--amber);}
+.stat-value.sage{color:var(--sage);}
+.stat-value.rust{color:var(--rust);}
+.stat-delta{font-size:11.5px; margin-top:6px; color:var(--text-dim);}
+.stat-delta.up{color:var(--sage);}
+.stat-delta.down{color:var(--rust);}
+
+/* ---- Hero / health score ---- */
+.hero{
+  display:grid; grid-template-columns:1.3fr 1fr; gap:20px; margin-bottom:20px;
+}
+@media(max-width:900px){.hero{grid-template-columns:1fr;}}
+.hero-rhythm{
+  background:linear-gradient(180deg, var(--ink-3), var(--ink-2));
+  border:1px solid var(--hair); border-radius:var(--radius); padding:22px; position:relative; overflow:hidden;
+}
+.hero-rhythm .tag{font-family:var(--mono); font-size:10px; letter-spacing:1.5px; text-transform:uppercase; color:var(--text-dim);}
+.hero-rhythm h2{font-family:var(--serif); font-size:22px; margin:6px 0 2px;}
+.hero-rhythm .note{font-size:12px; color:var(--text-dim); margin-bottom:10px;}
+.score-ring-wrap{
+  background:var(--ink-3); border:1px solid var(--hair); border-radius:var(--radius);
+  padding:22px; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center;
+}
+.score-num{font-family:var(--serif); font-size:52px; font-weight:700; line-height:1;}
+.score-label{font-family:var(--mono); font-size:10px; letter-spacing:1.5px; text-transform:uppercase; color:var(--text-dim); margin-top:8px;}
+.score-band{font-size:12.5px; margin-top:10px; padding:4px 12px; border-radius:20px; background:var(--ink-2); border:1px solid var(--hair);}
+
+/* ---- Table / list ---- */
+.list-row{
+  display:grid; grid-template-columns:1.6fr .9fr .9fr .9fr auto; gap:10px; align-items:center;
+  padding:11px 0; border-bottom:1px solid var(--hair); font-size:13px;
+}
+.list-row.head{font-family:var(--mono); font-size:10px; text-transform:uppercase; letter-spacing:1px; color:var(--text-dim); border-bottom:1px solid var(--hair);}
+.list-row input, .list-row select{
+  background:var(--ink); border:1px solid var(--hair); color:var(--text); border-radius:6px; padding:6px 8px; font-size:12.5px; width:100%;
+}
+.tag-pill{
+  font-family:var(--mono); font-size:10px; padding:3px 8px; border-radius:20px; display:inline-block;
+  background:var(--ink); border:1px solid var(--hair);
+}
+.tag-pill.freelance{color:var(--amber); border-color:var(--amber-dim);}
+.tag-pill.side{color:var(--sage); border-color:var(--sage-dim);}
+.tag-pill.fixed{color:var(--rust); border-color:#6b3226;}
+.icon-btn{
+  background:transparent; border:1px solid var(--hair); color:var(--text-dim); border-radius:6px; width:26px; height:26px; font-size:13px;
+}
+.icon-btn:hover{color:var(--rust); border-color:var(--rust);}
+
+.btn{
+  background:var(--amber); color:var(--ink); border:none; font-weight:600; padding:10px 16px; border-radius:7px; font-size:12.5px;
+  display:inline-flex; align-items:center; gap:6px; transition:transform .12s ease, box-shadow .12s ease;
+}
+.btn:hover{transform:translateY(-1px); box-shadow:0 6px 18px rgba(232,163,61,.25);}
+.btn.ghost{background:transparent; border:1px solid var(--hair); color:var(--text);}
+.btn.ghost:hover{border-color:var(--amber-dim);}
+.btn.sm{padding:7px 12px; font-size:11.5px;}
+
+.form-grid{display:grid; grid-template-columns:repeat(4,1fr); gap:10px; margin-bottom:16px;}
+@media(max-width:900px){.form-grid{grid-template-columns:1fr 1fr;}}
+.form-grid input, .form-grid select{
+  background:var(--ink); border:1px solid var(--hair); color:var(--text); border-radius:7px; padding:9px 10px; font-size:12.5px;
+}
+label.fl{font-family:var(--mono); font-size:9.5px; text-transform:uppercase; color:var(--text-dim); letter-spacing:1px; display:block; margin-bottom:5px;}
+
+canvas{width:100%; display:block;}
+
+.divider{height:1px; background:var(--hair); margin:26px 0;}
+
+.insight{
+  border-left:3px solid var(--amber); background:var(--ink-3); padding:12px 14px; border-radius:0 7px 7px 0; margin-bottom:10px; font-size:13px; line-height:1.5;
+}
+.insight.warn{border-color:var(--rust);}
+.insight.good{border-color:var(--sage);}
+.insight .lbl{font-family:var(--mono); font-size:9.5px; text-transform:uppercase; letter-spacing:1px; color:var(--text-dim); display:block; margin-bottom:4px;}
+
+.checklist label{display:flex; align-items:flex-start; gap:10px; font-size:13px; padding:9px 0; border-bottom:1px solid var(--hair); cursor:pointer;}
+.checklist input[type=checkbox]{margin-top:2px; accent-color:var(--amber);}
+.checklist input:checked + span{text-decoration:line-through; color:var(--text-dim);}
+
+.tip-card{background:var(--ink-2); border:1px solid var(--hair); border-radius:var(--radius); padding:16px; font-size:12.5px; line-height:1.55;}
+.tip-card .n{font-family:var(--serif); font-size:22px; color:var(--amber); display:block; margin-bottom:6px;}
+
+.progress-bar{height:8px; background:var(--ink); border-radius:20px; overflow:hidden; border:1px solid var(--hair);}
+.progress-bar > div{height:100%; background:linear-gradient(90deg, var(--sage-dim), var(--sage)); border-radius:20px; transition:width .5s ease;}
+
+.slider-row{display:flex; align-items:center; gap:12px; margin:14px 0;}
+.slider-row input[type=range]{flex:1; accent-color:var(--amber);}
+.slider-val{font-family:var(--mono); font-size:13px; width:90px; text-align:right; color:var(--amber);}
+
+.topbar{display:flex; justify-content:space-between; align-items:center; margin-bottom:22px; gap:10px; flex-wrap:wrap;}
+.topbar .actions{display:flex; gap:8px;}
+
+@media print{
+  .sidebar, .topbar, .no-print{display:none !important;}
+  .main{padding:0; max-width:100%;}
+  section.panel{display:block !important; page-break-after:always;}
+  body{background:#fff; color:#000;}
+  .card{border:1px solid #ccc; background:#fff;}
+}
+
+.footer-note{margin-top:40px; font-size:11px; color:var(--text-dim); text-align:center; padding-bottom:20px;}
+::-webkit-scrollbar{width:8px; height:8px;}
+::-webkit-scrollbar-thumb{background:var(--hair); border-radius:8px;}
+
+@media (max-width: 760px){
+  .shell{flex-direction:column;}
+  .sidebar{width:100%; height:auto; position:relative; flex-direction:row; overflow-x:auto; align-items:center; padding:12px;}
+  .nav{flex-direction:row; overflow-x:auto;}
+  .sidebar-foot{display:none;}
+  .brand-sub{display:none;}
+  .main{padding:20px;}
+  .form-grid{grid-template-columns:1fr 1fr;}
+}
+</style>
+</head>
+<body>
+
+<div class="shell">
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="brand">The Ledger <small>v1.0</small></div>
+    <div class="brand-sub">Command center for freelance &amp; side income</div>
+    <nav class="nav" id="navList">
+      <button class="nav-item active" data-panel="overview"><span class="num">01</span> Overview</button>
+      <button class="nav-item" data-panel="income"><span class="num">02</span> Income Streams</button>
+      <button class="nav-item" data-panel="expenses"><span class="num">03</span> Expenses</button>
+      <button class="nav-item" data-panel="cashflow"><span class="num">04</span> Cash Flow</button>
+      <button class="nav-item" data-panel="emergency"><span class="num">05</span> Emergency Fund</button>
+      <button class="nav-item" data-panel="goals"><span class="num">06</span> Goals</button>
+      <button class="nav-item" data-panel="tax"><span class="num">07</span> Tax Planner</button>
+      <button class="nav-item" data-panel="whatif"><span class="num">08</span> What-If Lab</button>
+      <button class="nav-item" data-panel="insights"><span class="num">09</span> Insights</button>
+      <button class="nav-item" data-panel="learn"><span class="num">10</span> Tips &amp; Resources</button>
+    </nav>
+    <div class="sidebar-foot">
+      <button class="mini-btn" id="themeToggle">☾ Dark mode <span id="themeIcon">●</span></button>
+      <button class="mini-btn" id="printBtn">🖨 Print report</button>
+      <button class="mini-btn" id="resetBtn">↺ Reset sample data</button>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <main class="main">
+
+    <!-- ============ OVERVIEW ============ -->
+    <section class="panel active" id="p-overview">
+      <div class="topbar">
+        <div class="page-head" style="margin-bottom:0;">
+          <div class="eyebrow">Ledger / Overview</div>
+          <div class="page-title">Your financial rhythm</div>
+          <div class="page-desc">A freelancer's income never lands on a straight line — this reads the rhythm of yours, and shows how prepared you are for the quiet months.</div>
+        </div>
+      </div>
+
+      <div class="hero">
+        <div class="hero-rhythm">
+          <div class="tag">Monthly net cash flow — last 6 months</div>
+          <h2 id="rhythmHeadline">Reading your rhythm…</h2>
+          <div class="note" id="rhythmNote">Freelance income plotted against side income and fixed costs.</div>
+          <canvas id="rhythmChart" height="180"></canvas>
+        </div>
+        <div class="score-ring-wrap">
+          <canvas id="scoreRing" width="160" height="160"></canvas>
+          <div class="score-num" id="scoreNum">—</div>
+          <div class="score-label">Financial health score</div>
+          <div class="score-band" id="scoreBand">Calculating…</div>
+        </div>
+      </div>
+
+      <div class="grid g4" id="statCards"></div>
+
+      <div class="divider"></div>
+
+      <div class="grid g2">
+        <div class="card">
+          <h3>Income mix</h3>
+          <div class="sub">Freelance retainers vs. project work vs. side income</div>
+          <canvas id="mixChart" height="200"></canvas>
+        </div>
+        <div class="card">
+          <h3>Where it's going</h3>
+          <div class="sub">Fixed costs, variable spend, and what's set aside</div>
+          <canvas id="allocChart" height="200"></canvas>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ INCOME ============ -->
+    <section class="panel" id="p-income">
+      <div class="page-head">
+        <div class="eyebrow">Ledger / 02</div>
+        <div class="page-title">Income streams</div>
+        <div class="page-desc">Log every client, retainer, and side gig. Mark how reliable each one is — that reliability score feeds your health score and emergency-fund target.</div>
+      </div>
+
+      <div class="card" style="margin-bottom:18px;">
+        <h3>Add income source</h3>
+        <div class="form-grid" style="margin-top:12px;">
+          <div><label class="fl">Source name</label><input id="inc-name" placeholder="e.g. Acme Retainer"></div>
+          <div><label class="fl">Monthly amount (₹)</label><input id="inc-amount" type="number" placeholder="25000"></div>
+          <div><label class="fl">Type</label>
+            <select id="inc-type"><option value="freelance">Freelance client</option><option value="side">Side income</option><option value="fixed">Fixed / salary</option></select>
+          </div>
+          <div><label class="fl">Reliability</label>
+            <select id="inc-reliability"><option value="high">High — steady</option><option value="medium" selected>Medium — variable</option><option value="low">Low — one-off</option></select>
+          </div>
+        </div>
+        <button class="btn" id="addIncomeBtn">+ Add income source</button>
+      </div>
+
+      <div class="card">
+        <div class="list-row head"><div>Source</div><div>Type</div><div>Reliability</div><div>Monthly ₹</div><div></div></div>
+        <div id="incomeList"></div>
+      </div>
+    </section>
+
+    <!-- ============ EXPENSES ============ -->
+    <section class="panel" id="p-expenses">
+      <div class="page-head">
+        <div class="eyebrow">Ledger / 03</div>
+        <div class="page-title">Expenses</div>
+        <div class="page-desc">Separate the costs that show up every month no matter what, from the ones that flex with your income.</div>
+      </div>
+
+      <div class="card" style="margin-bottom:18px;">
+        <h3>Add expense</h3>
+        <div class="form-grid" style="margin-top:12px;">
+          <div><label class="fl">Expense name</label><input id="exp-name" placeholder="e.g. Rent"></div>
+          <div><label class="fl">Monthly amount (₹)</label><input id="exp-amount" type="number" placeholder="12000"></div>
+          <div><label class="fl">Category</label>
+            <select id="exp-category"><option>Housing</option><option>Utilities</option><option>Food</option><option>Transport</option><option>Subscriptions</option><option>Tools/Software</option><option>Health</option><option>Debt/EMI</option><option>Discretionary</option><option>Other</option></select>
+          </div>
+          <div><label class="fl">Nature</label>
+            <select id="exp-nature"><option value="fixed">Fixed — recurring</option><option value="variable">Variable — flexes</option></select>
+          </div>
+        </div>
+        <button class="btn" id="addExpenseBtn">+ Add expense</button>
+      </div>
+
+      <div class="card">
+        <div class="list-row head"><div>Expense</div><div>Category</div><div>Nature</div><div>Monthly ₹</div><div></div></div>
+        <div id="expenseList"></div>
+      </div>
+    </section>
+
+    <!-- ============ CASH FLOW ============ -->
+    <section class="panel" id="p-cashflow">
+      <div class="page-head">
+        <div class="eyebrow">Ledger / 04</div>
+        <div class="page-title">Cash flow</div>
+        <div class="page-desc">The full picture: what comes in, what goes out, and what's genuinely left at the end of the month.</div>
+      </div>
+
+      <div class="grid g3" id="cashflowStats"></div>
+
+      <div class="card" style="margin-top:16px;">
+        <h3>12-month projection</h3>
+        <div class="sub">Assumes current income and expenses hold steady, with your set variability applied</div>
+        <canvas id="projectionChart" height="220"></canvas>
+      </div>
+    </section>
+
+    <!-- ============ EMERGENCY FUND ============ -->
+    <section class="panel" id="p-emergency">
+      <div class="page-head">
+        <div class="eyebrow">Ledger / 05 — your stated priority</div>
+        <div class="page-title">Emergency fund</div>
+        <div class="page-desc">For irregular income, the standard "3 months of expenses" rule is too thin. Here it's sized to how volatile your income actually is.</div>
+      </div>
+
+      <div class="grid g2">
+        <div class="card">
+          <h3>Fund target</h3>
+          <div class="sub">Based on your fixed expenses and income reliability mix</div>
+          <div class="form-grid" style="grid-template-columns:1fr 1fr;">
+            <div><label class="fl">Current fund balance (₹)</label><input id="ef-current" type="number" placeholder="50000"></div>
+            <div><label class="fl">Months of cover target</label>
+              <select id="ef-months"><option value="3">3 months</option><option value="4">4 months</option><option value="6" selected>6 months</option><option value="8">8 months</option><option value="12">12 months</option></select>
+            </div>
+          </div>
+          <div style="margin-top:14px;">
+            <div style="display:flex; justify-content:space-between; font-size:12.5px; margin-bottom:6px;">
+              <span id="efProgressLabel">₹0 of ₹0</span><span id="efPercentLabel">0%</span>
+            </div>
+            <div class="progress-bar"><div id="efProgressBar" style="width:0%"></div></div>
+          </div>
+          <div class="insight" id="efRecommend" style="margin-top:16px;"></div>
+        </div>
+        <div class="card">
+          <h3>Fill-the-gap simulator</h3>
+          <div class="sub">How fast can you get there by setting aside a fixed amount each month?</div>
+          <div class="slider-row">
+            <span style="font-size:12px; color:var(--text-dim); width:120px;">Monthly set-aside</span>
+            <input type="range" id="ef-monthly-save" min="500" max="30000" step="500" value="5000">
+            <span class="slider-val" id="ef-monthly-save-val">₹5,000</span>
+          </div>
+          <canvas id="efChart" height="180"></canvas>
+          <div class="insight good" id="efTimeline" style="margin-top:10px;"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ GOALS ============ -->
+    <section class="panel" id="p-goals">
+      <div class="page-head">
+        <div class="eyebrow">Ledger / 06</div>
+        <div class="page-title">Goals</div>
+        <div class="page-desc">Beyond the emergency fund — track any target you're saving toward, and see it against your realistic monthly surplus.</div>
+      </div>
+
+      <div class="card" style="margin-bottom:18px;">
+        <h3>Add a goal</h3>
+        <div class="form-grid" style="margin-top:12px;">
+          <div><label class="fl">Goal name</label><input id="goal-name" placeholder="e.g. New laptop"></div>
+          <div><label class="fl">Target amount (₹)</label><input id="goal-target" type="number" placeholder="80000"></div>
+          <div><label class="fl">Saved so far (₹)</label><input id="goal-saved" type="number" placeholder="10000"></div>
+          <div><label class="fl">Target month</label><input id="goal-date" type="month"></div>
+        </div>
+        <button class="btn" id="addGoalBtn">+ Add goal</button>
+      </div>
+
+      <div class="grid g2" id="goalsList"></div>
+    </section>
+
+    <!-- ============ TAX PLANNER ============ -->
+    <section class="panel" id="p-tax">
+      <div class="page-head">
+        <div class="eyebrow">Ledger / 07 — India, presumptive taxation</div>
+        <div class="page-title">Tax planner</div>
+        <div class="page-desc">A ballpark estimate for freelance/professional income under Section 44ADA (presumptive taxation for professionals) plus new regime slabs. This is directional, not filing-grade advice — confirm with a CA before filing.</div>
+      </div>
+
+      <div class="grid g2">
+        <div class="card">
+          <h3>Estimate your liability</h3>
+          <div class="form-grid" style="grid-template-columns:1fr 1fr; margin-top:12px;">
+            <div><label class="fl">Total annual gross receipts (₹)</label><input id="tax-gross" type="number" placeholder="900000"></div>
+            <div><label class="fl">Other income (fixed job, etc.) (₹)</label><input id="tax-other" type="number" placeholder="0"></div>
+            <div><label class="fl">Tax regime</label>
+              <select id="tax-regime"><option value="new">New regime</option><option value="old">Old regime (44ADA @ 50%)</option></select>
+            </div>
+            <div><label class="fl">Deductions (old regime only, ₹)</label><input id="tax-deductions" type="number" placeholder="150000"></div>
+          </div>
+          <button class="btn sm" id="calcTaxBtn">Calculate estimate</button>
+          <div class="insight" id="taxNote" style="margin-top:14px; display:none;"></div>
+        </div>
+        <div class="card">
+          <h3>Result</h3>
+          <div class="sub">Presumptive income = 50% of gross receipts under 44ADA (eligible professionals, receipts up to ₹75L with &lt;5% cash)</div>
+          <div id="taxResult">
+            <div class="stat-card" style="padding:0;">
+              <div class="stat-label">Estimated presumptive/taxable income</div>
+              <div class="stat-value amber" id="tax-taxable-income">₹0</div>
+            </div>
+            <div class="divider"></div>
+            <div class="stat-card" style="padding:0;">
+              <div class="stat-label">Estimated tax + cess</div>
+              <div class="stat-value rust" id="tax-total-due">₹0</div>
+              <div class="stat-delta" id="tax-effective-rate"></div>
+            </div>
+            <div class="divider"></div>
+            <div class="stat-card" style="padding:0;">
+              <div class="stat-label">Suggested monthly set-aside</div>
+              <div class="stat-value sage" id="tax-monthly-setaside">₹0</div>
+              <div class="stat-delta">So the tax bill never surprises you</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ WHAT-IF LAB ============ -->
+    <section class="panel" id="p-whatif">
+      <div class="page-head">
+        <div class="eyebrow">Ledger / 08</div>
+        <div class="page-title">What-if lab</div>
+        <div class="page-desc">Pull the levers. See how a dry client month, a new subscription, or a bigger monthly save changes your runway.</div>
+      </div>
+
+      <div class="card">
+        <h3>Scenario controls</h3>
+        <div class="slider-row">
+          <span style="font-size:12px; color:var(--text-dim); width:200px;">Freelance income change</span>
+          <input type="range" id="wi-income" min="-100" max="100" value="0">
+          <span class="slider-val" id="wi-income-val">0%</span>
+        </div>
+        <div class="slider-row">
+          <span style="font-size:12px; color:var(--text-dim); width:200px;">Fixed expenses change</span>
+          <input type="range" id="wi-expense" min="-50" max="100" value="0">
+          <span class="slider-val" id="wi-expense-val">0%</span>
+        </div>
+        <div class="slider-row">
+          <span style="font-size:12px; color:var(--text-dim); width:200px;">Months with zero freelance income</span>
+          <input type="range" id="wi-drymonths" min="0" max="6" value="0">
+          <span class="slider-val" id="wi-drymonths-val">0 months</span>
+        </div>
+        <div class="divider"></div>
+        <div class="grid g3">
+          <div class="stat-card">
+            <div class="stat-label">New monthly surplus</div>
+            <div class="stat-value" id="wi-surplus">₹0</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Emergency fund would last</div>
+            <div class="stat-value" id="wi-runway">0 mo</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Verdict</div>
+            <div class="stat-value" id="wi-verdict" style="font-size:16px;">—</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ INSIGHTS ============ -->
+    <section class="panel" id="p-insights">
+      <div class="page-head">
+        <div class="eyebrow">Ledger / 09</div>
+        <div class="page-title">Insights</div>
+        <div class="page-desc">Generated from your actual entries — recalculates every time you update income, expenses, or your fund.</div>
+      </div>
+      <div id="insightsList"></div>
+    </section>
+
+    <!-- ============ TIPS & RESOURCES ============ -->
+    <section class="panel" id="p-learn">
+      <div class="page-head">
+        <div class="eyebrow">Ledger / 10</div>
+        <div class="page-title">Tips, checklist &amp; resources</div>
+        <div class="page-desc">The habits that matter most for mixed freelance and side income.</div>
+      </div>
+
+      <h3 style="font-family:var(--serif); font-size:17px; margin-bottom:12px;">For freelance &amp; side income</h3>
+      <div class="grid g3" style="margin-bottom:26px;">
+        <div class="tip-card"><span class="n">01</span>Pay yourself a "salary." Move a fixed amount to a spending account monthly regardless of what came in — let the business/freelance account absorb the lumps.</div>
+        <div class="tip-card"><span class="n">02</span>Separate tax money the day it lands. Move your estimated tax % into a locked account immediately, not at filing time.</div>
+        <div class="tip-card"><span class="n">03</span>Size your emergency fund to your worst realistic dry spell, not a generic 3-month rule — irregular income needs more runway.</div>
+        <div class="tip-card"><span class="n">04</span>Track reliability, not just amount. A ₹10,000 steady retainer is worth more to your stability than a ₹30,000 one-off.</div>
+        <div class="tip-card"><span class="n">05</span>Advance tax has quarterly due dates (15 Jun, 15 Sep, 15 Dec, 15 Mar) — missing them adds interest under Sections 234B/234C.</div>
+        <div class="tip-card"><span class="n">06</span>Keep 3 income streams alive where possible — one dry client shouldn't threaten your whole month.</div>
+      </div>
+
+      <h3 style="font-family:var(--serif); font-size:17px; margin-bottom:12px;">Monthly checklist</h3>
+      <div class="card checklist" id="checklistCard" style="margin-bottom:26px;"></div>
+
+      <h3 style="font-family:var(--serif); font-size:17px; margin-bottom:12px;">Ask Claude</h3>
+      <div class="grid g2" style="margin-bottom:26px;">
+        <div class="tip-card">"Given my income mix, how many months of emergency fund do I actually need?"</div>
+        <div class="tip-card">"Help me estimate my quarterly advance tax payment under 44ADA."</div>
+        <div class="tip-card">"Which of my expenses could move from fixed to variable to increase my flexibility?"</div>
+        <div class="tip-card">"Design a savings ladder for irregular freelance income."</div>
+      </div>
+
+      <h3 style="font-family:var(--serif); font-size:17px; margin-bottom:12px;">Resources</h3>
+      <div class="grid g2">
+        <div class="tip-card">Income Tax India e-filing portal — for 44ADA presumptive taxation details and advance tax challans.</div>
+        <div class="tip-card">RBI &amp; SEBI investor education pages — for basics on where to park an emergency fund (liquid funds, sweep-in FDs).</div>
+      </div>
+
+      <div class="footer-note">The Ledger — all data stays in your browser's local storage. Nothing is sent anywhere. This tool provides general guidance, not professional financial or tax advice.</div>
+    </section>
+
+  </main>
+</div>
+
+<script>
+(function(){
+'use strict';
+
+/* ---------------- STATE ---------------- */
+const DEFAULTS = {
+  income: [
+    {id:1, name:'Core Dev Retainer', amount:22000, type:'freelance', reliability:'high'},
+    {id:2, name:'Project — Web App Build', amount:15000, type:'freelance', reliability:'low'},
+    {id:3, name:'UI Tutoring / Side gig', amount:6000, type:'side', reliability:'medium'}
+  ],
+  expenses: [
+    {id:1, name:'Rent share', amount:9000, category:'Housing', nature:'fixed'},
+    {id:2, name:'Internet & phone', amount:1200, category:'Utilities', nature:'fixed'},
+    {id:3, name:'Food & groceries', amount:6000, category:'Food', nature:'variable'},
+    {id:4, name:'Cloud/software tools', amount:1500, category:'Tools/Software', nature:'fixed'},
+    {id:5, name:'Transport', amount:2000, category:'Transport', nature:'variable'},
+    {id:6, name:'OTT & subscriptions', amount:700, category:'Subscriptions', nature:'fixed'}
+  ],
+  goals: [
+    {id:1, name:'New laptop for client work', target:80000, saved:15000, date:'2027-01'}
+  ],
+  emergencyFund: {current: 35000, monthsTarget: 6, monthlySave: 5000},
+  checklist: [
+    {t:"Move this month's tax set-aside to a separate account", done:false},
+    {t:'Reconcile all client payments received', done:false},
+    {t:'Review any expense that crept up this month', done:false},
+    {t:'Top up emergency fund transfer', done:false},
+    {t:'Check upcoming advance-tax due date', done:false},
+    {t:"Review one goal's progress", done:false}
+  ],
+  theme: 'dark'
+};
+
+let state = loadState();
+
+function loadState(){
+  try{
+    const raw = localStorage.getItem('ledger_state_v1');
+    if(raw) return JSON.parse(raw);
+  }catch(e){}
+  return JSON.parse(JSON.stringify(DEFAULTS));
+}
+function saveState(){
+  localStorage.setItem('ledger_state_v1', JSON.stringify(state));
+}
+
+/* ---------------- UTIL ---------------- */
+function inr(n){
+  n = Math.round(n||0);
+  const neg = n<0; n = Math.abs(n);
+  let s = n.toString();
+  let last3 = s.length>3 ? s.slice(-3) : s;
+  let rest = s.length>3 ? s.slice(0,-3) : '';
+  if(rest) last3 = ',' + last3;
+  let formatted = rest.replace(/\B(?=(\d{2})+(?!\d))/g, ',') + last3;
+  return (neg?'-':'') + '₹' + formatted;
+}
+function totalIncome(){ return state.income.reduce((a,b)=>a+Number(b.amount||0),0); }
+function totalExpenses(){ return state.expenses.reduce((a,b)=>a+Number(b.amount||0),0); }
+function fixedExpenses(){ return state.expenses.filter(e=>e.nature==='fixed').reduce((a,b)=>a+Number(b.amount||0),0); }
+function variableExpenses(){ return state.expenses.filter(e=>e.nature==='variable').reduce((a,b)=>a+Number(b.amount||0),0); }
+function reliableIncome(){
+  return state.income.filter(i=>i.reliability==='high').reduce((a,b)=>a+Number(b.amount||0),0);
+}
+function volatilityScore(){
+  // fraction of income that is NOT high-reliability
+  const t = totalIncome();
+  if(t===0) return 0.5;
+  const risky = state.income.filter(i=>i.reliability!=='high').reduce((a,b)=>a+Number(b.amount||0),0);
+  return risky/t;
+}
+
+/* ---------------- NAV ---------------- */
+document.querySelectorAll('.nav-item').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    document.querySelectorAll('.nav-item').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    document.querySelectorAll('section.panel').forEach(p=>p.classList.remove('active'));
+    document.getElementById('p-'+btn.dataset.panel).classList.add('active');
+    if(btn.dataset.panel==='overview') renderOverview();
+    if(btn.dataset.panel==='cashflow') renderCashflow();
+    if(btn.dataset.panel==='emergency') renderEmergency();
+    if(btn.dataset.panel==='whatif') renderWhatIf();
+    if(btn.dataset.panel==='insights') renderInsights();
+  });
+});
+
+/* ---------------- THEME ---------------- */
+const themeBtn = document.getElementById('themeToggle');
+function applyTheme(){
+  document.body.classList.toggle('light', state.theme==='light');
+  themeBtn.innerHTML = (state.theme==='light' ? '☀ Light mode <span>●</span>' : '☾ Dark mode <span>●</span>');
+}
+themeBtn.addEventListener('click', ()=>{
+  state.theme = state.theme==='light' ? 'dark' : 'light';
+  saveState(); applyTheme(); renderAll();
+});
+document.getElementById('printBtn').addEventListener('click', ()=>window.print());
+document.getElementById('resetBtn').addEventListener('click', ()=>{
+  if(confirm('Reset all data to sample defaults? This cannot be undone.')){
+    state = JSON.parse(JSON.stringify(DEFAULTS));
+    saveState(); applyTheme(); renderAll();
+  }
+});
+
+/* ---------------- INCOME ---------------- */
+document.getElementById('addIncomeBtn').addEventListener('click', ()=>{
+  const name = document.getElementById('inc-name').value.trim();
+  const amount = parseFloat(document.getElementById('inc-amount').value);
+  if(!name || !amount){ alert('Add a name and amount.'); return; }
+  state.income.push({
+    id: Date.now(),
+    name, amount,
+    type: document.getElementById('inc-type').value,
+    reliability: document.getElementById('inc-reliability').value
+  });
+  document.getElementById('inc-name').value='';
+  document.getElementById('inc-amount').value='';
+  saveState(); renderIncome(); renderOverview();
+});
+function renderIncome(){
+  const list = document.getElementById('incomeList');
+  list.innerHTML = '';
+  if(state.income.length===0){ list.innerHTML = '<div class="sub" style="padding:14px 0;">No income sources yet — add one above.</div>'; return; }
+  state.income.forEach(i=>{
+    const row = document.createElement('div');
+    row.className = 'list-row';
+    row.innerHTML = `
+      <div>${escapeHtml(i.name)}</div>
+      <div><span class="tag-pill ${i.type}">${i.type}</span></div>
+      <div style="text-transform:capitalize;">${i.reliability}</div>
+      <div style="font-family:var(--mono);">${inr(i.amount)}</div>
+      <div><button class="icon-btn" data-del="${i.id}">✕</button></div>
+    `;
+    list.appendChild(row);
+  });
+  list.querySelectorAll('[data-del]').forEach(b=>{
+    b.addEventListener('click', ()=>{
+      state.income = state.income.filter(x=>x.id != b.dataset.del);
+      saveState(); renderIncome(); renderOverview();
+    });
+  });
+}
+
+/* ---------------- EXPENSES ---------------- */
+document.getElementById('addExpenseBtn').addEventListener('click', ()=>{
+  const name = document.getElementById('exp-name').value.trim();
+  const amount = parseFloat(document.getElementById('exp-amount').value);
+  if(!name || !amount){ alert('Add a name and amount.'); return; }
+  state.expenses.push({
+    id: Date.now(),
+    name, amount,
+    category: document.getElementById('exp-category').value,
+    nature: document.getElementById('exp-nature').value
+  });
+  document.getElementById('exp-name').value='';
+  document.getElementById('exp-amount').value='';
+  saveState(); renderExpenses(); renderOverview();
+});
+function renderExpenses(){
+  const list = document.getElementById('expenseList');
+  list.innerHTML = '';
+  if(state.expenses.length===0){ list.innerHTML = '<div class="sub" style="padding:14px 0;">No expenses yet — add one above.</div>'; return; }
+  state.expenses.forEach(e=>{
+    const row = document.createElement('div');
+    row.className = 'list-row';
+    row.innerHTML = `
+      <div>${escapeHtml(e.name)}</div>
+      <div>${e.category}</div>
+      <div><span class="tag-pill ${e.nature==='fixed'?'fixed':'side'}">${e.nature}</span></div>
+      <div style="font-family:var(--mono);">${inr(e.amount)}</div>
+      <div><button class="icon-btn" data-del="${e.id}">✕</button></div>
+    `;
+    list.appendChild(row);
+  });
+  list.querySelectorAll('[data-del]').forEach(b=>{
+    b.addEventListener('click', ()=>{
+      state.expenses = state.expenses.filter(x=>x.id != b.dataset.del);
+      saveState(); renderExpenses(); renderOverview();
+    });
+  });
+}
+
+/* ---------------- GOALS ---------------- */
+document.getElementById('addGoalBtn').addEventListener('click', ()=>{
+  const name = document.getElementById('goal-name').value.trim();
+  const target = parseFloat(document.getElementById('goal-target').value);
+  const saved = parseFloat(document.getElementById('goal-saved').value) || 0;
+  const date = document.getElementById('goal-date').value;
+  if(!name || !target){ alert('Add a goal name and target amount.'); return; }
+  state.goals.push({id:Date.now(), name, target, saved, date});
+  document.getElementById('goal-name').value='';
+  document.getElementById('goal-target').value='';
+  document.getElementById('goal-saved').value='';
+  document.getElementById('goal-date').value='';
+  saveState(); renderGoals();
+});
+function renderGoals(){
+  const wrap = document.getElementById('goalsList');
+  wrap.innerHTML = '';
+  if(state.goals.length===0){ wrap.innerHTML = '<div class="sub">No goals yet — add one above.</div>'; return; }
+  const surplus = Math.max(totalIncome() - totalExpenses(), 0);
+  state.goals.forEach(g=>{
+    const pct = Math.min(100, Math.round((g.saved/g.target)*100)) || 0;
+    const remaining = Math.max(g.target - g.saved, 0);
+    let monthsLeft = '—';
+    if(surplus > 0) monthsLeft = Math.ceil(remaining / surplus) + ' mo at current surplus';
+    const div = document.createElement('div');
+    div.className = 'card';
+    div.innerHTML = `
+      <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+        <div><h3>${escapeHtml(g.name)}</h3><div class="sub">Target: ${g.date || 'no date set'}</div></div>
+        <button class="icon-btn" data-del="${g.id}">✕</button>
+      </div>
+      <div style="display:flex; justify-content:space-between; font-size:12.5px; margin-bottom:6px;">
+        <span>${inr(g.saved)} of ${inr(g.target)}</span><span>${pct}%</span>
+      </div>
+      <div class="progress-bar"><div style="width:${pct}%"></div></div>
+      <div class="stat-delta" style="margin-top:10px;">${monthsLeft}</div>
+    `;
+    wrap.appendChild(div);
+  });
+  wrap.querySelectorAll('[data-del]').forEach(b=>{
+    b.addEventListener('click', ()=>{
+      state.goals = state.goals.filter(x=>x.id != b.dataset.del);
+      saveState(); renderGoals();
+    });
+  });
+}
+
+/* ---------------- CHECKLIST ---------------- */
+function renderChecklist(){
+  const card = document.getElementById('checklistCard');
+  card.innerHTML = '';
+  state.checklist.forEach((item, idx)=>{
+    const label = document.createElement('label');
+    label.innerHTML = `<input type="checkbox" ${item.done?'checked':''} data-idx="${idx}"><span>${escapeHtml(item.t)}</span>`;
+    card.appendChild(label);
+  });
+  card.querySelectorAll('input[type=checkbox]').forEach(cb=>{
+    cb.addEventListener('change', ()=>{
+      state.checklist[cb.dataset.idx].done = cb.checked;
+      saveState();
+    });
+  });
+}
+
+/* ---------------- CANVAS HELPERS ---------------- */
+function setupCanvas(canvas){
+  const dpr = window.devicePixelRatio || 1;
+  const rect = canvas.getBoundingClientRect();
+  const h = canvas.height || 200;
+  canvas.width = Math.max(rect.width,300) * dpr;
+  canvas.height = h * dpr;
+  canvas.style.height = h+'px';
+  const ctx = canvas.getContext('2d');
+  ctx.scale(dpr,dpr);
+  return {ctx, w: Math.max(rect.width,300), h};
+}
+function cssVar(name){
+  return getComputedStyle(document.body).getPropertyValue(name).trim();
+}
+
+/* ---------------- RHYTHM CHART (overview hero) ---------------- */
+function renderRhythmChart(){
+  const canvas = document.getElementById('rhythmChart');
+  const {ctx, w, h} = setupCanvas(canvas);
+  ctx.clearRect(0,0,w,h);
+  const income = totalIncome(), expenses = totalExpenses();
+  const vol = volatilityScore();
+  // simulate 6 months of net cash flow with variability
+  const months = ['Feb','Mar','Apr','May','Jun','Jul'];
+  const data = months.map((m,idx)=>{
+    const seed = Math.sin(idx*1.7 + income*0.00001) ;
+    const factor = 1 + seed*vol*0.55;
+    return Math.round(income*factor - expenses);
+  });
+  const max = Math.max(...data, 1), min = Math.min(...data, 0);
+  const range = (max-min) || 1;
+  const pad = 24;
+  const stepX = (w-pad*2) / (months.length-1);
+  const zeroY = h - pad - ((0-min)/range)*(h-pad*2);
+
+  // zero line
+  ctx.strokeStyle = cssVar('--hair'); ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(pad, zeroY); ctx.lineTo(w-pad, zeroY); ctx.stroke();
+
+  // area + line
+  ctx.beginPath();
+  data.forEach((v,i)=>{
+    const x = pad + i*stepX;
+    const y = h - pad - ((v-min)/range)*(h-pad*2);
+    if(i===0) ctx.moveTo(x,y); else ctx.lineTo(x,y);
+  });
+  const grad = ctx.createLinearGradient(0,0,0,h);
+  grad.addColorStop(0, 'rgba(232,163,61,0.35)');
+  grad.addColorStop(1, 'rgba(232,163,61,0.02)');
+  const lineOnly = new Path2D();
+  data.forEach((v,i)=>{
+    const x = pad + i*stepX;
+    const y = h - pad - ((v-min)/range)*(h-pad*2);
+    if(i===0) lineOnly.moveTo(x,y); else lineOnly.lineTo(x,y);
+  });
+  ctx.strokeStyle = cssVar('--amber'); ctx.lineWidth = 2.5;
+  ctx.stroke(lineOnly);
+
+  // fill under line
+  ctx.lineTo(pad+(months.length-1)*stepX, h-pad);
+  ctx.lineTo(pad, h-pad);
+  ctx.closePath();
+  ctx.fillStyle = grad;
+  ctx.fill();
+
+  // dots + labels
+  ctx.font = '10px monospace';
+  data.forEach((v,i)=>{
+    const x = pad + i*stepX;
+    const y = h - pad - ((v-min)/range)*(h-pad*2);
+    ctx.fillStyle = v>=0 ? cssVar('--sage') : cssVar('--rust');
+    ctx.beginPath(); ctx.arc(x,y,3.2,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle = cssVar('--text-dim');
+    ctx.textAlign = 'center';
+    ctx.fillText(months[i], x, h-6);
+  });
+
+  const headline = document.getElementById('rhythmHeadline');
+  const note = document.getElementById('rhythmNote');
+  const avg = data.reduce((a,b)=>a+b,0)/data.length;
+  if(vol > 0.55){
+    headline.textContent = 'A volatile rhythm — worth cushioning';
+  } else if(vol > 0.25){
+    headline.textContent = 'A moderately steady rhythm';
+  } else {
+    headline.textContent = 'A steady, predictable rhythm';
+  }
+  note.textContent = `Simulated from your logged sources — average net flow ~${inr(avg)}/mo, ${Math.round(vol*100)}% of income is variable or one-off.`;
+}
+
+/* ---------------- SCORE RING ---------------- */
+function computeHealthScore(){
+  const income = totalIncome(), expenses = totalExpenses();
+  const surplus = income - expenses;
+  const savingsRate = income>0 ? surplus/income : 0;
+  const vol = volatilityScore();
+  const ef = state.emergencyFund;
+  const efTargetAmt = fixedExpenses() * ef.monthsTarget;
+  const efRatio = efTargetAmt>0 ? Math.min(ef.current/efTargetAmt,1) : 0;
+
+  let score = 0;
+  score += Math.max(0, Math.min(30, savingsRate*100*0.6)); // up to 30
+  score += (1-vol)*25; // up to 25 - lower volatility better
+  score += efRatio*30; // up to 30
+  score += (state.goals.length>0 ? 8 : 0);
+  score += (state.income.length>=2 ? 7 : 0); // diversified sources
+  score = Math.max(0, Math.min(100, Math.round(score)));
+  return score;
+}
+function renderScoreRing(){
+  const score = computeHealthScore();
+  const canvas = document.getElementById('scoreRing');
+  const ctx = canvas.getContext('2d');
+  const w = canvas.width, h = canvas.height;
+  ctx.clearRect(0,0,w,h);
+  const cx=w/2, cy=h/2, r=68;
+  ctx.lineWidth = 12;
+  ctx.strokeStyle = cssVar('--hair');
+  ctx.beginPath(); ctx.arc(cx,cy,r,0,Math.PI*2); ctx.stroke();
+
+  const pct = score/100;
+  const grad = ctx.createLinearGradient(0,0,w,h);
+  const color = score>=70 ? cssVar('--sage') : score>=45 ? cssVar('--amber') : cssVar('--rust');
+  ctx.strokeStyle = color;
+  ctx.lineCap = 'round';
+  ctx.beginPath();
+  ctx.arc(cx,cy,r, -Math.PI/2, -Math.PI/2 + pct*Math.PI*2);
+  ctx.stroke();
+
+  document.getElementById('scoreNum').textContent = score;
+  const band = document.getElementById('scoreBand');
+  if(score>=70){ band.textContent = 'Resilient'; band.style.color = cssVar('--sage'); }
+  else if(score>=45){ band.textContent = 'Building steady ground'; band.style.color = cssVar('--amber'); }
+  else { band.textContent = 'Needs a cushion'; band.style.color = cssVar('--rust'); }
+}
+
+/* ---------------- STAT CARDS ---------------- */
+function renderStatCards(){
+  const income = totalIncome(), expenses = totalExpenses();
+  const surplus = income - expenses;
+  const vol = volatilityScore();
+  const wrap = document.getElementById('statCards');
+  wrap.innerHTML = `
+    <div class="stat-card card">
+      <div class="stat-label">Monthly income <span>↗</span></div>
+      <div class="stat-value">${inr(income)}</div>
+      <div class="stat-delta">${state.income.length} source${state.income.length!==1?'s':''}</div>
+    </div>
+    <div class="stat-card card">
+      <div class="stat-label">Monthly expenses <span>↘</span></div>
+      <div class="stat-value">${inr(expenses)}</div>
+      <div class="stat-delta">${inr(fixedExpenses())} fixed · ${inr(variableExpenses())} variable</div>
+    </div>
+    <div class="stat-card card">
+      <div class="stat-label">Monthly surplus</div>
+      <div class="stat-value ${surplus>=0?'sage':'rust'}">${inr(surplus)}</div>
+      <div class="stat-delta ${surplus>=0?'up':'down'}">${surplus>=0?'Positive':'Negative'} cash flow</div>
+    </div>
+    <div class="stat-card card">
+      <div class="stat-label">Income volatility</div>
+      <div class="stat-value ${vol>0.5?'rust':vol>0.25?'amber':'sage'}">${Math.round(vol*100)}%</div>
+      <div class="stat-delta">Share of income that's variable/one-off</div>
+    </div>
+  `;
+}
+
+/* ---------------- MIX / ALLOC DONUT CHARTS ---------------- */
+function drawDonut(canvasId, segments){
+  const canvas = document.getElementById(canvasId);
+  const {ctx, w, h} = setupCanvas(canvas);
+  ctx.clearRect(0,0,w,h);
+  const cx = w*0.32, cy = h/2, r = Math.min(h/2-10, 70);
+  const total = segments.reduce((a,s)=>a+s.value,0) || 1;
+  let start = -Math.PI/2;
+  segments.forEach(seg=>{
+    const angle = (seg.value/total)*Math.PI*2;
+    ctx.beginPath();
+    ctx.moveTo(cx,cy);
+    ctx.arc(cx,cy,r,start,start+angle);
+    ctx.closePath();
+    ctx.fillStyle = seg.color;
+    ctx.fill();
+    start += angle;
+  });
+  ctx.globalCompositeOperation = 'destination-out';
+  ctx.beginPath(); ctx.arc(cx,cy,r*0.55,0,Math.PI*2); ctx.fill();
+  ctx.globalCompositeOperation = 'source-over';
+
+  // legend
+  let ly = 20;
+  ctx.font='11px sans-serif'; ctx.textAlign='left';
+  segments.forEach(seg=>{
+    const lx = w*0.6;
+    ctx.fillStyle = seg.color;
+    ctx.fillRect(lx, ly-9, 9,9);
+    ctx.fillStyle = cssVar('--text');
+    const pct = Math.round((seg.value/total)*100);
+    ctx.fillText(`${seg.label} — ${pct}%`, lx+14, ly);
+    ly += 20;
+  });
+}
+function renderMixChart(){
+  const byType = {freelance:0, side:0, fixed:0};
+  state.income.forEach(i=> byType[i.type] = (byType[i.type]||0) + Number(i.amount||0));
+  drawDonut('mixChart', [
+    {label:'Freelance', value:byType.freelance, color: cssVar('--amber')},
+    {label:'Side income', value:byType.side, color: cssVar('--sage')},
+    {label:'Fixed/salary', value:byType.fixed, color: cssVar('--blue')},
+  ]);
+}
+function renderAllocChart(){
+  const fixed = fixedExpenses(), variable = variableExpenses();
+  const surplus = Math.max(totalIncome()-totalExpenses(),0);
+  drawDonut('allocChart', [
+    {label:'Fixed costs', value:fixed, color: cssVar('--rust')},
+    {label:'Variable spend', value:variable, color: cssVar('--amber')},
+    {label:'Set aside / surplus', value:surplus, color: cssVar('--sage')},
+  ]);
+}
+
+/* ---------------- OVERVIEW ---------------- */
+function renderOverview(){
+  renderStatCards();
+  renderRhythmChart();
+  renderScoreRing();
+  renderMixChart();
+  renderAllocChart();
+}
+
+/* ---------------- CASH FLOW PANEL ---------------- */
+function renderCashflow(){
+  const income = totalIncome(), expenses = totalExpenses(), surplus = income-expenses;
+  const wrap = document.getElementById('cashflowStats');
+  wrap.innerHTML = `
+    <div class="stat-card card"><div class="stat-label">Total inflow</div><div class="stat-value sage">${inr(income)}</div></div>
+    <div class="stat-card card"><div class="stat-label">Total outflow</div><div class="stat-value rust">${inr(expenses)}</div></div>
+    <div class="stat-card card"><div class="stat-label">Net monthly</div><div class="stat-value">${inr(surplus)}</div></div>
+  `;
+  const canvas = document.getElementById('projectionChart');
+  const {ctx, w, h} = setupCanvas(canvas);
+  ctx.clearRect(0,0,w,h);
+  const vol = volatilityScore();
+  const pad = 30;
+  let balance = 0;
+  const points = [];
+  for(let m=0;m<12;m++){
+    const seed = Math.sin(m*1.3)*vol*0.5;
+    balance += Math.round(income*(1+seed) - expenses);
+    points.push(balance);
+  }
+  const max = Math.max(...points, 0), min = Math.min(...points, 0);
+  const range = (max-min)||1;
+  const stepX = (w-pad*2)/(points.length-1);
+  const zeroY = h-pad-((0-min)/range)*(h-pad*2);
+  ctx.strokeStyle = cssVar('--hair'); ctx.beginPath(); ctx.moveTo(pad,zeroY); ctx.lineTo(w-pad,zeroY); ctx.stroke();
+  ctx.beginPath();
+  points.forEach((v,i)=>{
+    const x = pad+i*stepX, y = h-pad-((v-min)/range)*(h-pad*2);
+    if(i===0) ctx.moveTo(x,y); else ctx.lineTo(x,y);
+  });
+  ctx.strokeStyle = cssVar('--blue'); ctx.lineWidth=2.5; ctx.stroke();
+  ctx.font='10px monospace'; ctx.fillStyle = cssVar('--text-dim'); ctx.textAlign='center';
+  points.forEach((v,i)=>{
+    if(i%2===0){ const x = pad+i*stepX; ctx.fillText('M'+(i+1), x, h-8); }
+  });
+}
+
+/* ---------------- EMERGENCY FUND PANEL ---------------- */
+document.getElementById('ef-current').addEventListener('input', e=>{ state.emergencyFund.current = parseFloat(e.target.value)||0; saveState(); renderEmergency(); renderOverview(); });
+document.getElementById('ef-months').addEventListener('change', e=>{ state.emergencyFund.monthsTarget = parseInt(e.target.value); saveState(); renderEmergency(); renderOverview(); });
+document.getElementById('ef-monthly-save').addEventListener('input', e=>{
+  state.emergencyFund.monthlySave = parseInt(e.target.value);
+  document.getElementById('ef-monthly-save-val').textContent = inr(state.emergencyFund.monthlySave);
+  saveState(); renderEmergency();
+});
+
+function renderEmergency(){
+  document.getElementById('ef-current').value = state.emergencyFund.current || '';
+  document.getElementById('ef-months').value = state.emergencyFund.monthsTarget;
+  document.getElementById('ef-monthly-save').value = state.emergencyFund.monthlySave;
+  document.getElementById('ef-monthly-save-val').textContent = inr(state.emergencyFund.monthlySave);
+
+  const target = fixedExpenses() * state.emergencyFund.monthsTarget;
+  const current = state.emergencyFund.current;
+  const pct = target>0 ? Math.min(100, Math.round((current/target)*100)) : 0;
+  document.getElementById('efProgressLabel').textContent = `${inr(current)} of ${inr(target)}`;
+  document.getElementById('efPercentLabel').textContent = pct+'%';
+  document.getElementById('efProgressBar').style.width = pct+'%';
+
+  const vol = volatilityScore();
+  const rec = document.getElementById('efRecommend');
+  const suggestedMonths = vol > 0.55 ? 8 : vol > 0.25 ? 6 : 4;
+  rec.innerHTML = `<span class="lbl">Recommended cover</span>Given ${Math.round(vol*100)}% of your income is variable or one-off, aim for around <strong>${suggestedMonths} months</strong> of fixed expenses (${inr(fixedExpenses()*suggestedMonths)}) rather than the generic 3-month rule.`;
+
+  // fill chart
+  const canvas = document.getElementById('efChart');
+  const {ctx, w, h} = setupCanvas(canvas);
+  ctx.clearRect(0,0,w,h);
+  const monthlySave = state.emergencyFund.monthlySave;
+  const gap = Math.max(target-current,0);
+  const monthsNeeded = monthlySave>0 ? Math.ceil(gap/monthlySave) : 0;
+  const totalMonths = Math.max(monthsNeeded, 1);
+  const pad=24;
+  const stepX = (w-pad*2)/totalMonths;
+  let bal = current;
+  ctx.beginPath();
+  ctx.moveTo(pad, h-pad-((bal/(target||1))*(h-pad*2)));
+  for(let m=1;m<=totalMonths;m++){
+    bal = Math.min(target, bal+monthlySave);
+    const x = pad+m*stepX;
+    const y = h-pad-((bal/(target||1))*(h-pad*2));
+    ctx.lineTo(x,y);
+  }
+  ctx.strokeStyle = cssVar('--sage'); ctx.lineWidth=2.5; ctx.stroke();
+  // target line
+  const targetY = h-pad-((1)*(h-pad*2));
+  ctx.strokeStyle = cssVar('--hair'); ctx.setLineDash([4,4]);
+  ctx.beginPath(); ctx.moveTo(pad,targetY); ctx.lineTo(w-pad,targetY); ctx.stroke();
+  ctx.setLineDash([]);
+
+  document.getElementById('efTimeline').innerHTML = target<=current
+    ? `<span class="lbl">Status</span>You've already reached your target — consider raising the months-of-cover target or redirecting savings to a goal.`
+    : `<span class="lbl">Projected timeline</span>At ${inr(monthlySave)}/month, you'll hit your ${state.emergencyFund.monthsTarget}-month target in <strong>${monthsNeeded} month${monthsNeeded!==1?'s':''}</strong>.`;
+}
+
+/* ---------------- TAX PLANNER ---------------- */
+function computeNewRegimeTax(taxable){
+  // FY24-25 new regime slabs (approx, for estimation only)
+  const slabs = [
+    [0,300000,0],[300000,600000,0.05],[600000,900000,0.10],
+    [900000,1200000,0.15],[1200000,1500000,0.20],[1500000,Infinity,0.30]
+  ];
+  let tax=0;
+  for(const [lo,hi,rate] of slabs){
+    if(taxable>lo){ tax += (Math.min(taxable,hi)-lo)*rate; }
+  }
+  // Section 87A rebate approx if taxable <= 700000 (new regime)
+  if(taxable<=700000) tax = 0;
+  return tax;
+}
+function computeOldRegimeTax(taxable){
+  const slabs = [[0,250000,0],[250000,500000,0.05],[500000,1000000,0.20],[1000000,Infinity,0.30]];
+  let tax=0;
+  for(const [lo,hi,rate] of slabs){
+    if(taxable>lo){ tax += (Math.min(taxable,hi)-lo)*rate; }
+  }
+  if(taxable<=500000) tax = 0; // 87A rebate approx
+  return tax;
+}
+document.getElementById('calcTaxBtn').addEventListener('click', ()=>{
+  const gross = parseFloat(document.getElementById('tax-gross').value)||0;
+  const other = parseFloat(document.getElementById('tax-other').value)||0;
+  const regime = document.getElementById('tax-regime').value;
+  const deductions = parseFloat(document.getElementById('tax-deductions').value)||0;
+
+  const presumptive = gross*0.5; // 44ADA
+  let taxable = presumptive + other;
+  if(regime==='old') taxable = Math.max(taxable - deductions, 0);
+
+  const tax = regime==='new' ? computeNewRegimeTax(taxable) : computeOldRegimeTax(taxable);
+  const cess = tax*0.04;
+  const totalDue = tax+cess;
+  const effectiveRate = taxable>0 ? (totalDue/taxable*100) : 0;
+
+  document.getElementById('tax-taxable-income').textContent = inr(taxable);
+  document.getElementById('tax-total-due').textContent = inr(totalDue);
+  document.getElementById('tax-effective-rate').textContent = `Effective rate ~${effectiveRate.toFixed(1)}%`;
+  document.getElementById('tax-monthly-setaside').textContent = inr(totalDue/12);
+
+  const note = document.getElementById('taxNote');
+  note.style.display = 'block';
+  note.innerHTML = `<span class="lbl">Note</span>44ADA applies to notified professionals with gross receipts up to ₹75L (if under 5% received in cash). Estimate excludes GST, advance-tax interest, and other-income deductions beyond what's entered. Confirm final numbers with a CA.`;
+});
+
+/* ---------------- WHAT-IF LAB ---------------- */
+['wi-income','wi-expense','wi-drymonths'].forEach(id=>{
+  document.getElementById(id).addEventListener('input', renderWhatIf);
+});
+function renderWhatIf(){
+  const incPct = parseInt(document.getElementById('wi-income').value);
+  const expPct = parseInt(document.getElementById('wi-expense').value);
+  const dryMonths = parseInt(document.getElementById('wi-drymonths').value);
+
+  document.getElementById('wi-income-val').textContent = (incPct>0?'+':'')+incPct+'%';
+  document.getElementById('wi-expense-val').textContent = (expPct>0?'+':'')+expPct+'%';
+  document.getElementById('wi-drymonths-val').textContent = dryMonths+' month'+(dryMonths!==1?'s':'');
+
+  const freelanceIncome = state.income.filter(i=>i.type==='freelance').reduce((a,b)=>a+Number(b.amount||0),0);
+  const otherIncome = totalIncome() - freelanceIncome;
+  const newFreelance = freelanceIncome * (1+incPct/100);
+  const newIncome = newFreelance + otherIncome;
+  const newExpenses = totalExpenses() * (1+expPct/100);
+  const surplus = newIncome - newExpenses;
+
+  document.getElementById('wi-surplus').textContent = inr(surplus);
+  document.getElementById('wi-surplus').className = 'stat-value ' + (surplus>=0?'sage':'rust');
+
+  // runway during dry months: freelance income drops to 0 for dryMonths, drawing from emergency fund
+  const monthlyBurnDuringDry = newExpenses - otherIncome;
+  const ef = state.emergencyFund.current;
+  let runwayMonths = monthlyBurnDuringDry>0 ? (ef/monthlyBurnDuringDry) : 99;
+  runwayMonths = Math.round(runwayMonths*10)/10;
+  document.getElementById('wi-runway').textContent = (runwayMonths>=99?'∞':runwayMonths)+' mo';
+
+  const verdictEl = document.getElementById('wi-verdict');
+  if(dryMonths===0 && surplus>=0){
+    verdictEl.textContent = 'Comfortable'; verdictEl.style.color = cssVar('--sage');
+  } else if(runwayMonths >= dryMonths && surplus>=0){
+    verdictEl.textContent = 'Would survive this'; verdictEl.style.color = cssVar('--amber');
+  } else if(runwayMonths >= dryMonths){
+    verdictEl.textContent = 'Tight, but covered'; verdictEl.style.color = cssVar('--amber');
+  } else {
+    verdictEl.textContent = 'Fund falls short'; verdictEl.style.color = cssVar('--rust');
+  }
+}
+
+/* ---------------- INSIGHTS ---------------- */
+function renderInsights(){
+  const wrap = document.getElementById('insightsList');
+  wrap.innerHTML = '';
+  const insights = [];
+  const income = totalIncome(), expenses = totalExpenses(), surplus = income-expenses;
+  const vol = volatilityScore();
+  const ef = state.emergencyFund;
+  const efTarget = fixedExpenses()*ef.monthsTarget;
+
+  if(surplus < 0){
+    insights.push({type:'warn', label:'Cash flow alert', text:`Your logged expenses (${inr(expenses)}) exceed income (${inr(income)}) by ${inr(Math.abs(surplus))}/month. Trim variable spend or add a stream before building savings further.`});
+  } else {
+    insights.push({type:'good', label:'Positive surplus', text:`You're running a monthly surplus of ${inr(surplus)} — about ${income>0?Math.round(surplus/income*100):0}% of income. That's real capacity for the emergency fund or a goal.`});
+  }
+
+  if(vol > 0.5){
+    insights.push({type:'warn', label:'High income volatility', text:`${Math.round(vol*100)}% of your income comes from variable or one-off sources. A single quiet month could hit hard — this is exactly why sizing your emergency fund above the generic 3-month rule matters.`});
+  } else if(vol > 0.25){
+    insights.push({type:null, label:'Moderate volatility', text:`Your income is a healthy freelance-plus-side mix, but still carries some swing month to month. Keep at least one steady anchor client if you can.`});
+  }
+
+  if(ef.current < efTarget){
+    const gap = efTarget-ef.current;
+    insights.push({type:'warn', label:'Emergency fund gap', text:`You're ${inr(gap)} short of your ${ef.monthsTarget}-month target. At your current ${inr(ef.monthlySave)}/month pace, that's about ${Math.ceil(gap/(ef.monthlySave||1))} months away.`});
+  } else {
+    insights.push({type:'good', label:'Fund on target', text:`Your emergency fund already covers your ${ef.monthsTarget}-month target of ${inr(efTarget)}. Consider redirecting new savings toward a goal or investing the surplus.`});
+  }
+
+  const freelanceCount = state.income.filter(i=>i.type==='freelance').length;
+  if(freelanceCount <= 1){
+    insights.push({type:null, label:'Concentration risk', text:`Most of your income sits with a single freelance source. Diversifying — even a small second client — reduces how hard a dry month lands.`});
+  }
+
+  if(state.goals.length===0){
+    insights.push({type:null, label:'No goals set', text:`You haven't logged a savings goal yet. Once your emergency fund is on track, a concrete goal (with a date) tends to keep saving motivation higher than an open-ended target.`});
+  }
+
+  insights.forEach(ins=>{
+    const div = document.createElement('div');
+    div.className = 'insight' + (ins.type?(' '+ins.type):'');
+    div.innerHTML = `<span class="lbl">${ins.label}</span>${ins.text}`;
+    wrap.appendChild(div);
+  });
+}
+
+/* ---------------- HELPERS ---------------- */
+function escapeHtml(s){
+  return String(s).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+/* ---------------- INIT ---------------- */
+function renderAll(){
+  renderIncome();
+  renderExpenses();
+  renderGoals();
+  renderChecklist();
+  renderOverview();
+  renderCashflow();
+  renderEmergency();
+  renderWhatIf();
+  renderInsights();
+}
+applyTheme();
+renderAll();
+window.addEventListener('resize', ()=>{ renderOverview(); renderCashflow(); renderEmergency(); });
+})();
+</script>
+</body>
+</html>
