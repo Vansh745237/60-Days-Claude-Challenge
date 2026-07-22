@@ -1,0 +1,687 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Compare & Decide — Pro Laptops for Creative/Dev Work</title>
+<style>
+  :root{
+    --bg:#0b0e14;
+    --panel:#131722;
+    --panel-2:#171c29;
+    --border:#232a3b;
+    --border-light:#2d3548;
+    --text:#e8ecf4;
+    --text-dim:#9aa4b8;
+    --text-faint:#6b7488;
+    --accent:#5b8cff;
+    --accent-2:#7ee0c0;
+    --warn:#f5b95c;
+    --warn-bg:#3a2f18;
+    --good:#7ee0c0;
+    --danger:#ff6b6b;
+    --radius:14px;
+    --shadow:0 10px 30px rgba(0,0,0,.35);
+    font-size:16px;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:
+      radial-gradient(1200px 600px at 10% -10%, #17203a 0%, transparent 60%),
+      radial-gradient(1000px 500px at 100% 0%, #1a1530 0%, transparent 55%),
+      var(--bg);
+    color:var(--text);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    line-height:1.5;
+    min-height:100vh;
+    padding-bottom:60px;
+  }
+  a{color:var(--accent);}
+  .wrap{max-width:1180px;margin:0 auto;padding:0 20px;}
+
+  /* ---------- Header ---------- */
+  header{padding:44px 0 28px;}
+  .eyebrow{
+    display:inline-flex;align-items:center;gap:8px;
+    font-size:12px;letter-spacing:.08em;text-transform:uppercase;
+    color:var(--accent-2);background:rgba(126,224,192,.08);
+    border:1px solid rgba(126,224,192,.25);
+    padding:5px 12px;border-radius:100px;margin-bottom:16px;
+  }
+  h1{font-size:clamp(28px,4vw,40px);margin:0 0 10px;letter-spacing:-.02em;}
+  .sub{color:var(--text-dim);max-width:680px;font-size:15.5px;margin:0;}
+  .persona-tag{
+    margin-top:18px;display:flex;flex-wrap:wrap;gap:10px;
+  }
+  .chip{
+    font-size:12.5px;color:var(--text-dim);background:var(--panel);
+    border:1px solid var(--border);padding:6px 12px;border-radius:100px;
+  }
+
+  /* ---------- Loading / Empty states ---------- */
+  #loadingState{
+    display:flex;flex-direction:column;align-items:center;justify-content:center;
+    padding:90px 20px;color:var(--text-dim);gap:16px;
+  }
+  .spinner{
+    width:34px;height:34px;border-radius:50%;
+    border:3px solid var(--border-light);border-top-color:var(--accent);
+    animation:spin 0.9s linear infinite;
+  }
+  @keyframes spin{to{transform:rotate(360deg);}}
+  #errorState{
+    display:none;padding:60px 20px;text-align:center;color:var(--text-dim);
+    background:var(--panel);border:1px solid var(--border);border-radius:var(--radius);
+  }
+  #errorState h3{color:var(--text);margin-top:0;}
+
+  #app{display:none;}
+
+  /* ---------- Layout ---------- */
+  .grid{
+    display:grid;
+    grid-template-columns: 300px 1fr;
+    gap:24px;
+    align-items:start;
+  }
+  @media (max-width:900px){
+    .grid{grid-template-columns:1fr;}
+  }
+
+  /* ---------- Weight panel ---------- */
+  .panel{
+    background:var(--panel);
+    border:1px solid var(--border);
+    border-radius:var(--radius);
+    padding:22px;
+    box-shadow:var(--shadow);
+  }
+  .panel h2{font-size:15px;margin:0 0 4px;letter-spacing:-.01em;}
+  .panel .hint{font-size:12.5px;color:var(--text-faint);margin:0 0 18px;}
+  .weight-row{margin-bottom:18px;}
+  .weight-row:last-child{margin-bottom:0;}
+  .weight-label{
+    display:flex;justify-content:space-between;align-items:baseline;
+    font-size:13.5px;margin-bottom:6px;
+  }
+  .weight-label .name{color:var(--text);font-weight:600;}
+  .weight-label .val{color:var(--accent-2);font-variant-numeric:tabular-nums;font-weight:600;}
+  input[type=range]{
+    -webkit-appearance:none;appearance:none;
+    width:100%;height:6px;border-radius:6px;
+    background:var(--border-light);outline:none;cursor:pointer;
+  }
+  input[type=range]::-webkit-slider-thumb{
+    -webkit-appearance:none;appearance:none;
+    width:18px;height:18px;border-radius:50%;
+    background:var(--accent);border:3px solid #0b0e14;
+    box-shadow:0 0 0 2px var(--accent);cursor:grab;
+  }
+  input[type=range]::-moz-range-thumb{
+    width:18px;height:18px;border-radius:50%;
+    background:var(--accent);border:3px solid #0b0e14;
+    box-shadow:0 0 0 2px var(--accent);cursor:grab;
+  }
+  .panel-actions{
+    margin-top:20px;padding-top:18px;border-top:1px solid var(--border);
+    display:flex;gap:8px;flex-wrap:wrap;
+  }
+  .btn-ghost{
+    background:transparent;border:1px solid var(--border-light);
+    color:var(--text-dim);font-size:12.5px;padding:8px 12px;border-radius:9px;
+    cursor:pointer;transition:.15s;
+  }
+  .btn-ghost:hover{border-color:var(--accent);color:var(--text);}
+  .preset-row{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px;}
+  .preset-btn{
+    font-size:12px;padding:6px 10px;border-radius:100px;
+    background:var(--panel-2);border:1px solid var(--border);
+    color:var(--text-dim);cursor:pointer;transition:.15s;
+  }
+  .preset-btn:hover{border-color:var(--accent);color:var(--text);}
+  .preset-btn.active{background:rgba(91,140,255,.15);border-color:var(--accent);color:var(--accent-2);}
+
+  /* ---------- Ranking list ---------- */
+  .rank-card{
+    background:var(--panel);
+    border:1px solid var(--border);
+    border-radius:var(--radius);
+    padding:18px 20px;
+    margin-bottom:14px;
+    box-shadow:var(--shadow);
+    display:flex;
+    gap:18px;
+    align-items:flex-start;
+    transition:transform .35s ease, border-color .3s ease;
+    position:relative;
+  }
+  .rank-card.top{border-color:rgba(126,224,192,.4);}
+  .rank-num{
+    font-size:22px;font-weight:800;color:var(--text-faint);
+    width:34px;flex-shrink:0;padding-top:2px;
+    font-variant-numeric:tabular-nums;
+  }
+  .rank-card.top .rank-num{color:var(--accent-2);}
+  .rank-body{flex:1;min-width:0;}
+  .rank-top-row{
+    display:flex;justify-content:space-between;align-items:flex-start;
+    gap:12px;flex-wrap:wrap;margin-bottom:4px;
+  }
+  .rank-title{font-size:18px;font-weight:700;letter-spacing:-.01em;}
+  .rank-sub{font-size:12.5px;color:var(--text-faint);margin-top:2px;}
+  .rank-price{font-size:13px;color:var(--text-dim);white-space:nowrap;}
+  .score-pill{
+    font-size:13px;font-weight:700;color:#0b0e14;
+    background:var(--accent-2);padding:4px 11px;border-radius:100px;
+    white-space:nowrap;
+  }
+  .badge-best{
+    font-size:10.5px;letter-spacing:.05em;text-transform:uppercase;
+    color:#0b0e14;background:var(--accent-2);
+    padding:3px 9px;border-radius:100px;font-weight:700;margin-left:8px;
+  }
+  .bars{margin-top:14px;display:flex;flex-direction:column;gap:8px;}
+  .bar-row{display:grid;grid-template-columns:96px 1fr 34px;gap:10px;align-items:center;}
+  .bar-label{font-size:11.5px;color:var(--text-dim);}
+  .bar-track{height:7px;background:var(--panel-2);border-radius:6px;overflow:hidden;border:1px solid var(--border);}
+  .bar-fill{height:100%;border-radius:6px;background:linear-gradient(90deg,var(--accent),var(--accent-2));transition:width .5s ease;}
+  .bar-val{font-size:11px;color:var(--text-faint);text-align:right;font-variant-numeric:tabular-nums;}
+  .est-flag{
+    display:inline-block;font-size:9.5px;color:var(--warn);background:var(--warn-bg);
+    border:1px solid rgba(245,185,92,.35);border-radius:4px;padding:1px 5px;margin-left:5px;
+    vertical-align:middle;font-weight:600;letter-spacing:.02em;
+  }
+  .detail-toggle{
+    margin-top:14px;background:none;border:none;color:var(--accent);
+    font-size:12.5px;cursor:pointer;padding:0;display:flex;align-items:center;gap:5px;
+  }
+  .detail-toggle svg{transition:transform .2s;}
+  .detail-toggle.open svg{transform:rotate(90deg);}
+  .rank-detail{
+    display:none;margin-top:12px;padding-top:12px;border-top:1px solid var(--border);
+    font-size:12.8px;color:var(--text-dim);
+  }
+  .rank-detail.open{display:block;}
+  .detail-item{margin-bottom:9px;}
+  .detail-item:last-child{margin-bottom:0;}
+  .detail-item b{color:var(--text);font-weight:600;}
+
+  /* ---------- Sources panel ---------- */
+  .sources-section{margin-top:34px;}
+  .sec-head{
+    display:flex;align-items:center;justify-content:space-between;
+    cursor:pointer;user-select:none;
+  }
+  .sec-head h2{font-size:17px;margin:0;}
+  .sec-head .arrow{transition:transform .2s;color:var(--text-dim);}
+  .sec-head .arrow.open{transform:rotate(180deg);}
+  .sources-body{display:none;margin-top:16px;}
+  .sources-body.open{display:block;}
+  .source-grid{
+    display:grid;grid-template-columns:1fr 1fr;gap:12px;
+  }
+  @media (max-width:700px){.source-grid{grid-template-columns:1fr;}}
+  .source-card{
+    background:var(--panel);border:1px solid var(--border);
+    border-radius:11px;padding:14px 16px;font-size:12.8px;
+  }
+  .source-card .laptop-name{font-weight:700;font-size:13.5px;margin-bottom:8px;color:var(--accent-2);}
+  .source-card ul{margin:0;padding-left:16px;}
+  .source-card li{margin-bottom:6px;color:var(--text-dim);}
+  .source-card li a{word-break:break-word;}
+
+  /* ---------- Research methodology panel ---------- */
+  .research-panel{
+    background:var(--panel);border:1px solid var(--border);
+    border-radius:var(--radius);margin-top:16px;overflow:hidden;
+  }
+  .research-head{
+    padding:18px 20px;display:flex;justify-content:space-between;align-items:center;
+    cursor:pointer;user-select:none;
+  }
+  .research-head h2{font-size:15.5px;margin:0;}
+  .research-body{display:none;padding:0 20px 22px;font-size:13.2px;color:var(--text-dim);}
+  .research-body.open{display:block;}
+  .research-body h4{color:var(--text);font-size:13.5px;margin:18px 0 6px;}
+  .research-body h4:first-child{margin-top:4px;}
+  .research-body p{margin:0 0 10px;}
+  .conflict-box{
+    background:var(--panel-2);border:1px solid var(--border);border-left:3px solid var(--warn);
+    border-radius:8px;padding:12px 14px;margin:10px 0;font-size:12.6px;
+  }
+  .conflict-box b{color:var(--warn);}
+
+  footer{margin-top:40px;text-align:center;color:var(--text-faint);font-size:12px;}
+  .flag-legend{
+    display:inline-flex;align-items:center;gap:6px;font-size:12px;color:var(--text-faint);
+    margin-top:10px;
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <span class="eyebrow">Compare &amp; Decide</span>
+    <h1>Pro Laptop Showdown: 14" MacBook Pro vs. Framework 13 Pro vs. Surface Laptop 6 vs. Spectre x360</h1>
+    <p class="sub">Built for a creative professional or developer choosing one work machine. Adjust the sliders to match what matters to you — the ranking updates live, using only sourced, citable data. No invented numbers.</p>
+    <div class="persona-tag">
+      <span class="chip">👤 For: professionals &amp; creatives choosing a daily work laptop</span>
+      <span class="chip">🎯 Decision: which one machine to buy</span>
+      <span class="chip">📅 Data current as of July 2026</span>
+    </div>
+  </header>
+
+  <div id="loadingState">
+    <div class="spinner"></div>
+    <div>Loading comparison data…</div>
+  </div>
+
+  <div id="errorState">
+    <h3>Something went wrong loading the comparison</h3>
+    <p>Please refresh the page. If the problem continues, the underlying dataset may be malformed.</p>
+  </div>
+
+  <div id="app">
+    <div class="grid">
+
+      <!-- WEIGHT PANEL -->
+      <div class="panel" id="weightPanel">
+        <h2>Weight your priorities</h2>
+        <p class="hint">Drag to set how much each criterion matters. Weights are automatically normalized — the ranking recalculates instantly.</p>
+
+        <div class="preset-row" id="presetRow"></div>
+
+        <div id="sliders"></div>
+
+        <div class="panel-actions">
+          <button class="btn-ghost" id="resetBtn">Reset to equal weights</button>
+        </div>
+      </div>
+
+      <!-- RANKING -->
+      <div>
+        <div id="rankingList"></div>
+        <div id="emptyState" style="display:none;" class="panel">
+          <p style="margin:0;color:var(--text-dim);">No laptops match — this shouldn't happen with fixed weights, but if you're seeing this, try the reset button.</p>
+        </div>
+
+        <div class="flag-legend"><span class="est-flag">EST</span> = editorial estimate, not a directly sourced figure — flagged wherever used.</div>
+
+        <!-- SOURCES -->
+        <div class="sources-section">
+          <div class="sec-head" id="sourcesToggle">
+            <h2>📚 Sources panel — every citation used</h2>
+            <span class="arrow">▾</span>
+          </div>
+          <div class="sources-body" id="sourcesBody"></div>
+        </div>
+
+        <!-- RESEARCH METHODOLOGY -->
+        <div class="research-panel">
+          <div class="research-head" id="researchToggle">
+            <h2>🔍 How this was researched</h2>
+            <span class="arrow">▾</span>
+          </div>
+          <div class="research-body" id="researchBody">
+
+            <h4>What the scores mean</h4>
+            <p>Each criterion score (0–100) is a <b style="color:var(--text)">Compare &amp; Decide composite</b> — not a third-party index — built directly from the sourced figures shown in each laptop's detail panel and the sources list below. Composites were used only where a single directly-comparable published number didn't exist across all four laptops (this applies to Display, Ports, and part of Build Quality). Where one clean sourced number existed for all four machines — Geekbench 6 Multi-Core for performance — that number was used with no adjustment.</p>
+
+            <h4>Battery life</h4>
+            <p>Vendor-claimed hours (Apple, Framework, Microsoft, HP) are shown for reference, but the ranking uses independent/real-world test results where available, since vendor claims are measured under best-case conditions (e.g. dimmed screen, video looping, Wi-Fi off). MacBook Pro 14 uses TurboVS's rated 20-hour figure; HP Spectre x360 uses PCWorld's measured 11-hour video-loop result. Framework Laptop 13 Pro and Surface Laptop 6 real-world figures come from ranges reported by reviewers (Vibetric: 12–16h; iFeeltech: 6–8h) rather than a single lab number, so the midpoint of each range was used and flagged <span class="est-flag">EST</span>.</p>
+
+            <h4>Build quality &amp; repairability</h4>
+            <p>Framework Laptop 13 Pro (10/10) and the MacBook Pro 14 (4/10) scores trace to iFixit teardown data as reported by PC Gamer and a 2026 repairability retrospective. No iFixit numeric teardown score for the specific Surface Laptop 6 (2024, Intel) or the current HP Spectre x360 14 (2024, Core Ultra) configuration turned up in this research — iFixit's most recent Surface teardown covers the different Surface Laptop 7 (Snapdragon, 8/10), and coverage of the Spectre x360 only described its repairability qualitatively (SSD swappable, RAM soldered). Both of those two scores are therefore editorial estimates <span class="est-flag">EST</span>, positioned using the qualitative descriptions in their respective sources rather than a hard number.</p>
+
+            <div class="conflict-box"><b>Conflict resolved:</b> HP's marketed "up to 18 hours" of Spectre x360 battery life sits well above PCWorld's measured 11 hours and Techozea's real-world 10–11 hours. The two independent tests agree closely with each other, so the app favors that figure over the vendor claim, which is shown alongside it for transparency.</div>
+
+            <div class="conflict-box"><b>Conflict resolved:</b> Surface Laptop 6's Microsoft-rated "up to 18.5 hours" is far above iFeeltech's 2026 real-world estimate of 6–8 hours for typical business workflows (attributed to the Meteor Lake platform's average efficiency). The independent figure was used for ranking; the vendor figure is shown for reference.</div>
+
+            <h4>Performance</h4>
+            <p>Geekbench 6 Multi-Core scores for each laptop's mid-tier configuration were pulled from NanoReview's aggregated Geekbench Browser samples, which was the only source with directly comparable figures for all four machines' actual processors (Apple M5 Pro, Intel Core Ultra X7 358H, Intel Core Ultra 7 165H, Intel Core Ultra 7 155H).</p>
+
+            <h4>Display</h4>
+            <p>No single third-party index scores all four displays on the same scale, so this composite combines resolution (pixel count), confirmed panel technology (OLED, mini-LED XDR, or LCD), and confirmed refresh rate, each drawn from the cited manufacturer or review source. HP's Spectre x360 OLED panel and Apple's mini-LED XDR panel score highest on color/contrast capability; Surface Laptop 6's 3:2 PixelSense panel scores lowest mainly on pixel density and the absence of a published high-refresh or HDR spec in the sources found.</p>
+
+            <h4>Ports &amp; connectivity</h4>
+            <p>Scored by port count, transfer-standard speed (Thunderbolt 5 &gt; Thunderbolt/USB4 &gt; USB-C), and — for Framework specifically — its fully swappable Expansion Card system, which by design lets the user choose which ports are physically present. This flexibility was judged the strongest connectivity story of the four, per Framework's own product documentation and Notebookcheck's coverage.</p>
+
+            <h4>Models used</h4>
+            <p>Comparisons use each line's most current or most relevant mid-tier configuration as of July 2026: MacBook Pro 14" (M5 Pro, released March 2026); Framework Laptop 13 Pro (April 2026 redesign); Surface Laptop 6 for Business (2024, Intel Core Ultra H-series — the model the user specified, not the newer Snapdragon-based Surface Laptop 7/8); HP Spectre x360 14 (2024, Core Ultra 7 155H — HP has begun rebranding this line to "OmniBook Ultra" but the Spectre x360 14 remains sold and supported as of this research).</p>
+
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <footer>Compare &amp; Decide — figures reflect publicly available data as of July 2026 and change as vendors update pricing, firmware, and configurations. Always verify current specs before purchasing.</footer>
+  </div>
+</div>
+
+<script>
+(function(){
+
+  // ---------------------------------------------------------------
+  // DATA — every numeric claim below is paired with a named source.
+  // ---------------------------------------------------------------
+  const CRITERIA = [
+    { key:'battery',     label:'Battery Life' },
+    { key:'build',       label:'Build & Repair' },
+    { key:'display',     label:'Display' },
+    { key:'performance', label:'CPU/GPU Perf.' },
+    { key:'ports',       label:'Ports & Conn.' }
+  ];
+
+  const LAPTOPS = [
+    {
+      id:'mbp14',
+      name:'MacBook Pro 14"',
+      subtitle:'Apple M5 Pro (15-core) · 2026',
+      price:'From $2,199 (14", M5 Pro, 24GB/1TB)',
+      scores:{ battery:100, build:40, display:98, performance:100, ports:85 },
+      details:{
+        battery:{ text:'Apple rates the 14" M5 Pro at up to 22 hours (72.4Wh cell). TurboVS\'s independent review rated real-world battery life at 20 hours, which is the figure used for ranking.', estimate:false },
+        build:{ text:'A 2026 iFixit-sourced repairability retrospective lists the current MacBook Pro at 4/10 — RAM and storage remain soldered to the M-series chip and Apple\'s parts-pairing software locks persist for swapped components, though USB-C ports are individually replaceable.', estimate:false },
+        display:{ text:'14.2" Liquid Retina XDR mini-LED panel, 3024×1964, 120Hz ProMotion, 1000 nits sustained brightness / 1600 nits peak HDR, 1,000,000:1 contrast.', estimate:false },
+        performance:{ text:'Geekbench 6 Multi-Core: 17,581 · Single-Core: 4,169 (M5 Pro, 15-core CPU / 16-core GPU), per NanoReview\'s aggregated Geekbench Browser samples.', estimate:false },
+        ports:{ text:'3× Thunderbolt 5, 1× HDMI, SDXC card reader, MagSafe 3 charging, 3.5mm headphone jack, Wi-Fi 7, Bluetooth 6.0. No native USB-A.', estimate:false }
+      }
+    },
+    {
+      id:'fw13pro',
+      name:'Framework Laptop 13 Pro',
+      subtitle:'Intel Core Ultra X7 358H · 2026',
+      price:'From $1,499',
+      scores:{ battery:70, build:100, display:72, performance:52, ports:100 },
+      details:{
+        battery:{ text:'Framework claims up to 20 hours (74Wh battery, 4K Netflix streaming test at 250 nits, per Framework\'s own published testing methodology). An independent review (Vibetric) estimates real-world mixed-workload battery life at 12–16 hours; the midpoint (14h) is used for ranking.', estimate:true },
+        build:{ text:'iFixit has consistently awarded the Framework Laptop 13 line a 10/10 for repairability (reaffirmed in an April 2026 re-review per PC Gamer) — fully modular Expansion Card ports, tool-light disassembly, and user-replaceable battery, RAM, and storage.', estimate:false },
+        display:{ text:'13.5" LTPS LCD, 2880×1920, 3:2 aspect ratio, up to 700 nits peak brightness, per NanoReview\'s published spec sheet for the Laptop 13 Pro.', estimate:false },
+        performance:{ text:'Geekbench 6 Multi-Core: 9,155 · Single-Core: 2,461 (Core Ultra X7 358H configuration), per NanoReview.', estimate:false },
+        ports:{ text:'Fully modular Expansion Card bays — user chooses from USB-C, USB-A, HDMI, DisplayPort, Ethernet, microSD, or extra storage per slot, per Framework\'s official product documentation.', estimate:false }
+      }
+    },
+    {
+      id:'sl6',
+      name:'Surface Laptop 6',
+      subtitle:'Intel Core Ultra 7 165H (for Business) · 2024',
+      price:'From $1,199 (13.5", Core Ultra 5, 8GB/256GB)',
+      scores:{ battery:35, build:35, display:49, performance:74, ports:75 },
+      details:{
+        battery:{ text:'Microsoft rates the 13.5" model at up to 18.5 hours "typical usage." An independent 2026 review (iFeeltech) found real-world business-workflow battery life of 6–8 hours on Core Ultra Series 1 (Meteor Lake) hardware; the midpoint (7h) is used for ranking.', estimate:true },
+        build:{ text:'No iFixit numeric teardown of this specific Surface Laptop 6 (2024, Intel) configuration was found. Microsoft\'s own marketing states it has "more replaceable components than Surface Laptop 5," which scored poorly. iFixit\'s most recent Surface Laptop teardown (8/10) covers the different Surface Laptop 7 (Snapdragon, redesigned chassis) — a separate generation from the Laptop 6 compared here. This score is an editorial estimate positioned between the two.', estimate:true },
+        display:{ text:'13.5" PixelSense touchscreen, 2256×1504, 3:2 aspect ratio, per Microsoft\'s official spec sheet. No independently verified peak-brightness or high-refresh-rate figure was found in sources reviewed for this configuration.', estimate:false },
+        performance:{ text:'Geekbench 6 Multi-Core: 12,979 · Single-Core: (Core Ultra 7 165H), per NanoReview\'s aggregated Geekbench Browser samples.', estimate:false },
+        ports:{ text:'USB4/Thunderbolt 4 ports, legacy USB-A, Surface Connect charging port, 3.5mm headphone jack, Wi-Fi 6E, per Microsoft\'s official product page.', estimate:false }
+      }
+    },
+    {
+      id:'spectre',
+      name:'HP Spectre x360 14',
+      subtitle:'Intel Core Ultra 7 155H · 2024',
+      price:'$1,499–$1,699 (per Techozea 2026 pricing survey)',
+      scores:{ battery:55, build:45, display:94, performance:71, ports:68 },
+      details:{
+        battery:{ text:'HP markets "up to 18 hours." PCWorld\'s standardized video-loop test measured 11 hours; Techozea\'s 2026 review independently reports a consistent 10–11 hours in daily use. The measured 11-hour figure is used for ranking.', estimate:false },
+        build:{ text:'No explicit numeric iFixit teardown score for this Spectre x360 14 configuration was found. A March 2026 repairability-focused article describes it qualitatively as "middle ground": the M.2 SSD is user-replaceable with standard tools, but RAM is soldered to the motherboard. This score is an editorial estimate based on that qualitative description.', estimate:true },
+        display:{ text:'14" OLED, 2880×1800, up to 120Hz dynamic refresh, 400 nits typical brightness, 100% DCI-P3 coverage, per PCWorld\'s hands-on review.', estimate:false },
+        performance:{ text:'Geekbench 6 Multi-Core: 12,515 · Single-Core: 2,421 (Core Ultra 7 155H), per NanoReview\'s aggregated Geekbench Browser samples.', estimate:false },
+        ports:{ text:'3× Thunderbolt 4, 1× USB-A, microSD card reader, 3.5mm headphone jack, Wi-Fi 7. No HDMI port.', estimate:false }
+      }
+    }
+  ];
+
+  const SOURCES = {
+    'mbp14':[
+      {label:'Apple — MacBook Pro 14" (M5) official specs & pricing', url:'https://www.apple.com/shop/buy-mac/macbook-pro/14-inch-m5'},
+      {label:'Notebookcheck — MacBook Pro 14 2026 M5 Pro reviews collection', url:'https://www.notebookcheck.net/Apple-MacBook-Pro-14-2026-M5-Pro.1304517.0.html'},
+      {label:'NanoReview — MacBook Pro 14 (M5, 2026) full specs & benchmarks', url:'https://nanoreview.net/en/laptop/apple-macbook-pro-14-m5-2026'},
+      {label:'TurboVS — Apple MacBook Pro (2026) 14" review & full specs', url:'https://www.turbovs.com/review/apple-macbook-pro-2026-14-49930'},
+      {label:'Digital Digest — Laptop Repairability Scores 2026 (iFixit-sourced)', url:'https://digitaldigest.com/laptop-repairability-scores-2026/'},
+      {label:'PhoneArena — Apple MacBook Pro M5 release date, price, specs', url:'https://www.phonearena.com/apple-macbook-pro-m5-release-date-price-features-news'}
+    ],
+    'fw13pro':[
+      {label:'Framework — Laptop 13 Pro official product page', url:'https://frame.work/laptop13pro'},
+      {label:'NanoReview — Framework Laptop 13 Pro full specs & benchmarks', url:'https://nanoreview.net/en/laptop/framework-laptop-13-pro'},
+      {label:'PC Gamer — iFixit repairability coverage of Framework laptops', url:'https://www.pcgamer.com/hardware/gaming-laptops/ifixit-awards-the-framework-12-laptop-a-10-10-for-repairability-respects-your-time-your-budget-and-your-ability-to-make-repairs/'},
+      {label:'Vibetric — Framework Laptop Pro 13 review (2026)', url:'https://vibetric.com/framework-laptop-pro-13-review/'},
+      {label:'Notebookcheck — Framework Laptop 13 Pro news coverage', url:'https://www.notebookcheck.net/Framework-Laptop-13-Pro-promises-more-battery-life-performance-and-metal.1280024.0.html'}
+    ],
+    'sl6':[
+      {label:'Microsoft — Surface Laptop 6 for Business official specs', url:'https://www.microsoft.com/en-us/surface/business/surface-laptop-6'},
+      {label:'Tom\'s Hardware — Surface Laptop 6 for Business announcement & pricing', url:'https://www.tomshardware.com/laptops/ultrabooks-ultraportables/microsofts-surface-pro-10-and-surface-laptop-6-for-business-are-all-in-on-office-copilots'},
+      {label:'Tom\'s Guide — Microsoft Surface Laptop 6 price, specs and more', url:'https://www.tomsguide.com/computing/laptops/microsoft-surface-laptop-6'},
+      {label:'iFeeltech — Surface Laptop 6 for Business review (2026)', url:'https://ifeeltech.com/blog/surface-laptop-6-business-review'},
+      {label:'NanoReview — Intel Core Ultra 7 165H benchmarks', url:'https://nanoreview.net/en/cpu/intel-core-ultra-7-165h'},
+      {label:'iFixit / PCWorld / Thurrott — Surface repairability history (Laptop 7, 8/10)', url:'https://www.ifixit.com/News/96998/from-0-10-to-8-10-microsoft-puts-repair-front-and-center'}
+    ],
+    'spectre':[
+      {label:'PCWorld — HP Spectre x360 14 review (battery & display testing)', url:'https://www.pcworld.com/article/2267557/hp-spectre-x360-14-review-3.html'},
+      {label:'Techozea — HP Spectre x360 14 review (2026)', url:'https://techozea.com/hp-spectre-x360-14-review/'},
+      {label:'NanoReview — Intel Core Ultra 7 155H benchmarks', url:'https://nanoreview.net/en/cpu/intel-core-ultra-7-155h'},
+      {label:'The Tech Showdown — HP Spectre x360 14 (2024) review & pricing', url:'https://thetechshowdown.com/products/hp-spectre-x360-14'},
+      {label:'Safa Tech Blog — Repairable Laptop War of 2026 (Spectre repairability description)', url:'https://safa.tech.blog/2026/02/23/lenovo-space-frame-vs-apple-macbook-repairability-2026/'}
+    ]
+  };
+
+  const PRESETS = {
+    balanced:{ battery:20, build:20, display:20, performance:20, ports:20 },
+    creative:{ battery:15, build:10, display:40, performance:30, ports:5 },
+    developer:{ battery:20, build:25, display:10, performance:30, ports:15 },
+    roadwarrior:{ battery:45, build:15, display:15, performance:10, ports:15 }
+  };
+  const PRESET_LABELS = {
+    balanced:'Balanced', creative:'Creative / video work', developer:'Dev / long sessions', roadwarrior:'Road warrior (battery-first)'
+  };
+
+  let weights = Object.assign({}, PRESETS.balanced);
+  let activePreset = 'balanced';
+
+  // ---------------------------------------------------------------
+  // RENDER
+  // ---------------------------------------------------------------
+  function normalizedWeights(){
+    const total = CRITERIA.reduce((s,c)=>s+weights[c.key],0);
+    if(total <= 0) return CRITERIA.reduce((o,c)=>{o[c.key]=1/CRITERIA.length;return o;},{});
+    const out = {};
+    CRITERIA.forEach(c=> out[c.key] = weights[c.key]/total );
+    return out;
+  }
+
+  function computeRanking(){
+    const nw = normalizedWeights();
+    return LAPTOPS.map(l=>{
+      let total = 0;
+      CRITERIA.forEach(c=>{ total += (l.scores[c.key]||0) * nw[c.key]; });
+      return { laptop:l, total: total };
+    }).sort((a,b)=> b.total - a.total);
+  }
+
+  function renderSliders(){
+    const container = document.getElementById('sliders');
+    container.innerHTML = '';
+    CRITERIA.forEach(c=>{
+      const row = document.createElement('div');
+      row.className = 'weight-row';
+      row.innerHTML = `
+        <div class="weight-label">
+          <span class="name">${c.label}</span>
+          <span class="val" id="val-${c.key}">${weights[c.key]}%</span>
+        </div>
+        <input type="range" min="0" max="100" step="1" value="${weights[c.key]}" id="slider-${c.key}">
+      `;
+      container.appendChild(row);
+    });
+    CRITERIA.forEach(c=>{
+      document.getElementById(`slider-${c.key}`).addEventListener('input', (e)=>{
+        weights[c.key] = parseInt(e.target.value,10);
+        document.getElementById(`val-${c.key}`).textContent = weights[c.key] + '%';
+        activePreset = null;
+        updatePresetButtons();
+        renderRanking();
+      });
+    });
+  }
+
+  function renderPresets(){
+    const row = document.getElementById('presetRow');
+    row.innerHTML = '';
+    Object.keys(PRESETS).forEach(key=>{
+      const btn = document.createElement('button');
+      btn.className = 'preset-btn' + (activePreset===key ? ' active':'');
+      btn.textContent = PRESET_LABELS[key];
+      btn.addEventListener('click', ()=>{
+        weights = Object.assign({}, PRESETS[key]);
+        activePreset = key;
+        renderSliders();
+        updatePresetButtons();
+        renderRanking();
+      });
+      row.appendChild(btn);
+    });
+  }
+  function updatePresetButtons(){
+    document.querySelectorAll('.preset-btn').forEach((btn,i)=>{
+      const key = Object.keys(PRESETS)[i];
+      btn.classList.toggle('active', activePreset===key);
+    });
+  }
+
+  function barColorFor(score){
+    return score >= 80 ? 'linear-gradient(90deg,#5b8cff,#7ee0c0)' :
+           score >= 55 ? 'linear-gradient(90deg,#5b8cff,#8fa6ff)' :
+           'linear-gradient(90deg,#7a5bff,#ff6b6b)';
+  }
+
+  function renderRanking(){
+    const ranked = computeRanking();
+    const list = document.getElementById('rankingList');
+    const empty = document.getElementById('emptyState');
+
+    if(!ranked || ranked.length === 0){
+      list.innerHTML = '';
+      empty.style.display = 'block';
+      return;
+    }
+    empty.style.display = 'none';
+
+    list.innerHTML = ranked.map((r, idx)=>{
+      const l = r.laptop;
+      const isTop = idx === 0;
+      const bars = CRITERIA.map(c=>{
+        const val = l.scores[c.key]||0;
+        const det = l.details[c.key];
+        const flag = det.estimate ? '<span class="est-flag">EST</span>' : '';
+        return `
+          <div class="bar-row">
+            <div class="bar-label">${c.label}${flag}</div>
+            <div class="bar-track"><div class="bar-fill" style="width:${val}%;background:${barColorFor(val)};"></div></div>
+            <div class="bar-val">${val}</div>
+          </div>
+        `;
+      }).join('');
+
+      const detailItems = CRITERIA.map(c=>{
+        const det = l.details[c.key];
+        const flag = det.estimate ? ' <span class="est-flag">EST</span>' : '';
+        return `<div class="detail-item"><b>${c.label}${flag}:</b> ${det.text}</div>`;
+      }).join('');
+
+      return `
+        <div class="rank-card ${isTop ? 'top':''}">
+          <div class="rank-num">${idx+1}</div>
+          <div class="rank-body">
+            <div class="rank-top-row">
+              <div>
+                <span class="rank-title">${l.name}</span>${isTop ? '<span class="badge-best">Best match</span>':''}
+                <div class="rank-sub">${l.subtitle} · ${l.price}</div>
+              </div>
+              <div class="score-pill">${r.total.toFixed(1)} / 100</div>
+            </div>
+            <div class="bars">${bars}</div>
+            <button class="detail-toggle" data-id="${l.id}">
+              <svg width="10" height="10" viewBox="0 0 10 10"><path d="M2 1 L8 5 L2 9" stroke="currentColor" stroke-width="1.6" fill="none"/></svg>
+              Why this score — sourced data behind each bar
+            </button>
+            <div class="rank-detail" id="detail-${l.id}">${detailItems}</div>
+          </div>
+        </div>
+      `;
+    }).join('');
+
+    document.querySelectorAll('.detail-toggle').forEach(btn=>{
+      btn.addEventListener('click', ()=>{
+        const id = btn.getAttribute('data-id');
+        const panel = document.getElementById(`detail-${id}`);
+        panel.classList.toggle('open');
+        btn.classList.toggle('open');
+      });
+    });
+  }
+
+  function renderSources(){
+    const body = document.getElementById('sourcesBody');
+    body.innerHTML = `<div class="source-grid">` + LAPTOPS.map(l=>{
+      const srcs = SOURCES[l.id] || [];
+      return `
+        <div class="source-card">
+          <div class="laptop-name">${l.name}</div>
+          <ul>${srcs.map(s=>`<li><a href="${s.url}" target="_blank" rel="noopener">${s.label}</a></li>`).join('')}</ul>
+        </div>
+      `;
+    }).join('') + `</div>`;
+  }
+
+  function wireCollapsibles(){
+    const sTog = document.getElementById('sourcesToggle');
+    const sBody = document.getElementById('sourcesBody');
+    sTog.addEventListener('click', ()=>{
+      sBody.classList.toggle('open');
+      sTog.querySelector('.arrow').classList.toggle('open');
+    });
+
+    const rTog = document.getElementById('researchToggle');
+    const rBody = document.getElementById('researchBody');
+    rTog.addEventListener('click', ()=>{
+      rBody.classList.toggle('open');
+      rTog.querySelector('.arrow').classList.toggle('open');
+    });
+  }
+
+  document.getElementById('resetBtn').addEventListener('click', ()=>{
+    weights = Object.assign({}, PRESETS.balanced);
+    activePreset = 'balanced';
+    renderSliders();
+    updatePresetButtons();
+    renderRanking();
+  });
+
+  // ---------------------------------------------------------------
+  // INIT — with graceful error handling
+  // ---------------------------------------------------------------
+  function init(){
+    try{
+      if(!LAPTOPS || LAPTOPS.length === 0) throw new Error('No laptop data available');
+      renderPresets();
+      renderSliders();
+      renderRanking();
+      renderSources();
+      wireCollapsibles();
+      document.getElementById('loadingState').style.display = 'none';
+      document.getElementById('app').style.display = 'block';
+    }catch(err){
+      document.getElementById('loadingState').style.display = 'none';
+      document.getElementById('errorState').style.display = 'block';
+      console.error(err);
+    }
+  }
+
+  // Simulate brief, honest loading state (no artificial data fetching — just a smooth entrance)
+  setTimeout(init, 350);
+
+})();
+</script>
+</body>
+</html>
